@@ -1,0 +1,18 @@
+#app-content-wrapper #app-content{
+    height: 100%;
+}
+
+#inner-app-content{
+    padding: 0;
+}
+.warning{
+    font-size: 200%;
+    color: red;
+}
+
+.flex-container-row {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: center;
+}
