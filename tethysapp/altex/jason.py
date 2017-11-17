@@ -8,22 +8,26 @@ from scipy import stats
 import time
 import json
 import inspect
-import matplotlib
 import scipy.io
 import netCDF4,os,sys,glob,scipy,zipfile
 import calendar
 import pickle
 
+# Replace this with the path to the data directory
+JASON_DIR = '/home/dev/avisoftp.cnes.fr/AVISO/pub/jason-2/gdr_d'
+
+geoid_grid_file = inspect.getfile(inspect.currentframe()).replace('jason.py','public/data/geoidegm2008grid.mat')
+x = loadmat(geoid_grid_file)
+iy=interpolate.interp2d(x['lonbp'],x['latbp'],x['grid'])
+
+# Geoidal Correction factor. The average between the lower and upper bounds.
 def geoidalCorrection(lon_,lat_):
-    geoid_grid_file = inspect.getfile(inspect.currentframe()).replace('jason.py','public/data/geoidegm2008grid.mat')
-
-    x = loadmat(geoid_grid_file)
-    iy=interpolate.interp2d(x['lonbp'],x['latbp'],x['grid'])
     corr = iy(lon_, lat_)[0]
-
     return corr
 
+# Extract the height and timestep from a filtered netCDF file
 def parse_netCDF(file,lat_range,geoid):
+
     data = Dataset(file)
     nc_dims = [dim for dim in data.dimensions]
 
@@ -67,6 +71,7 @@ def parse_netCDF(file,lat_range,geoid):
 
     for i in range(0, dim_size):
 
+        # A check to see if the alt state flag ku band status is good
         if alt_state_flag_ku_band_status[i] != 0:
             continue
 
@@ -87,26 +92,29 @@ def parse_netCDF(file,lat_range,geoid):
             hght.append(alt_20hz[i, j] - (media_corr + ice_range_20hz_ku[i, j]))
             bs.append(ice_sig0_20hz_ku[i, j])
 
+    # Check to make sure that the distance between is the points is sufficient
     if len(latd) > 0:
 
         mjd_20hz = (np.array(mjd_20hz)).mean()
+
+        # At times the date is out of range, a hack to get around that.
         try:
             mjd = netCDF4.num2date(mjd_20hz, time_20hz_units, calendar='gregorian')
         except Exception:
             return 'NULL'
-        time_stamp = calendar.timegm(mjd.utctimetuple()) * 1000
+
+        time_stamp = calendar.timegm(mjd.utctimetuple()) * 1000 # Converting date to utc timestamp for Highcharts
+
         ht = np.array(hght)
 
-        height = ht - geoid
-        height = np.nanmean(height)
+        height = ht - geoid  # Subtract the correction factor from the height
+        height = np.nanmean(height) # Get the mean of the height
 
-        return time_stamp,height
+        return time_stamp,height #Timestamp and height for Highcharts
     else:
         return 'NULL'
 
 def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
-
-    jason_dir = '/home/dev/avisoftp.cnes.fr/AVISO/pub/jason-2/gdr_d'
 
     ts_plot = []
     lon_=(float(lon1)+float(lon2))/2
@@ -114,8 +122,8 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
 
     corr = geoidalCorrection(lon_,lat_)
 
-    for dir in sorted(os.listdir(jason_dir)):
-        working_dir = os.path.join(jason_dir,dir)
+    for dir in sorted(os.listdir(JASON_DIR)):
+        working_dir = os.path.join(JASON_DIR,dir)
 
         for file in sorted(os.listdir(working_dir)):
             if track in file:
@@ -133,11 +141,12 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
 
                 if track == pass_num:
                     if start_date <= pass_start_date <= pass_end_date <= end_date:
+
                         try:
                             time_stamp,hgt = parse_netCDF(os.path.join(working_dir,file),[lat1,lat2],corr)
-                        except Exception:
+                        except Exception: # If it returns NULL, move on to the next file.
                             continue
-                        ts_plot.append([time_stamp,round(float(hgt),3)])
+                        ts_plot.append([time_stamp,round(float(hgt),3)]) # Return this to the frontend
 
     return ts_plot
 

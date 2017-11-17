@@ -2,6 +2,7 @@ $(function(){
     $('#app-content-wrapper').removeClass('show-nav');
     $(".toggle-nav").removeClass('toggle-nav');
     $("#inner-app-content").addClass("row");
+
 });
 
 //Get a CSRF cookie for request

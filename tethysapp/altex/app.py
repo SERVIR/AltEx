@@ -34,6 +34,11 @@ class Altex(TethysAppBase):
                 url='altex/timeseries',
                 controller='altex.ajax_controllers.timeseries'
             ),
+            UrlMap(
+                name='api_get_timeseries',
+                url='altex/api/timeseries',
+                controller='altex.api.api_get_timeseries'
+            ),
         )
 
         return url_maps

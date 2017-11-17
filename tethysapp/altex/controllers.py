@@ -13,9 +13,10 @@ def home(request):
                             autoclose=True,
                             format='MM d, yyyy',
                             start_date='1/1/2008',
+                            end_date='3/15/2017',
                             start_view='decade',
-                            today_button=True,
-                            initial='January 1, 2008')
+                            today_button=False,
+                            initial='January 1, 2015')
 
     end_date = DatePicker(name='end-date',
                           attributes={'id': 'end-date'},
@@ -23,9 +24,10 @@ def home(request):
                           autoclose=True,
                           format='MM d, yyyy',
                           start_date='1/1/2008',
+                          end_date='3/15/2017',
                           start_view='decade',
-                          today_button=True,
-                          initial='December 1, 2008')
+                          today_button=False,
+                          initial='December 1, 2016')
 
     select_sat = SelectInput(display_text='Select Sensor',
                              name='select-sat',

@@ -33,6 +33,5 @@ def timeseries(request):
 
             except Exception as e:
                 return_obj["error"] = "Error Processing Request. Error: "+ str(e)
-                print e
 
     return JsonResponse(return_obj)

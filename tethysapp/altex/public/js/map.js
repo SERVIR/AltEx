@@ -68,7 +68,7 @@ var LIBRARY_OBJECT = (function() {
 
         var jason2_layer = new ol.layer.Image({
             source: new ol.source.ImageWMS({
-                url: 'http://127.0.0.1:8181/geoserver/wms',
+                url: 'http://tethys.servirglobal.net:8181/geoserver/wms',
                 params: {'LAYERS':'altex:Jason2_Ground_Track'},
                 serverType: 'geoserver',
                 crossOrigin: 'Anonymous'
@@ -87,7 +87,7 @@ var LIBRARY_OBJECT = (function() {
 
         var saral_layer = new ol.layer.Image({
             source: new ol.source.ImageWMS({
-                url: 'http://127.0.0.1:8181/geoserver/wms',
+                url: 'http://tethys.servirglobal.net:8181/geoserver/wms',
                 params: {'LAYERS':'altex:SARAL_Ground_Track'},
                 serverType: 'geoserver',
                 crossOrigin: 'Anonymous'
@@ -392,14 +392,13 @@ var LIBRARY_OBJECT = (function() {
                 return false;
             }
 
-
             var lwr_pt = point1.split(",");
             var upr_pt = point2.split(",");
             var wgs84_sphere = new ol.Sphere(6378137);
             var distance = wgs84_sphere.haversineDistance([parseFloat(lwr_pt[0]),parseFloat(lwr_pt[1])],[parseFloat(upr_pt[0]),parseFloat(upr_pt[1])]);
             if(distance < 350){
                 $('.warning').html('<b>The distance between the points has to be greater than 350 m. Please make the necessary changes and try again.</b>');
-                $loading.removeClass('hidden');
+                $loading.addClass('hidden');
                 $("#plotter").addClass('hidden');
                 return false;
             }
@@ -410,45 +409,50 @@ var LIBRARY_OBJECT = (function() {
                 if("success" in data) {
                     // var json_response = JSON.parse(data);
                     $loading.addClass('hidden');
-                    $("#plotter").removeClass('hidden');
-                    $("#plotter").highcharts({
-                        chart: {
-                            type:'area',
-                            zoomType: 'x',
-                            height: 350
-                        },
-                        title: {
-                            text:"Values at between Lat 1: " +data.lat1+' and Lat 2: '+data.lat2,
-                            style: {
-                                fontSize: '14px'
-                            }
-                        },
-                        xAxis: {
-                            type: 'datetime',
-                            labels: {
-                             format: '{value:%d %b %Y}'
-                            // rotation: 90,
-                            // align: 'left'
-                             },
+                    if(data.values.length > 0){
+                        $("#plotter").removeClass('hidden');
+                        Highcharts.stockChart('plotter',{
+                            chart: {
+                                type:'area',
+                                zoomType: 'x',
+                                height: 350
+                            },
                             title: {
-                                text: 'Date'
-                            }
-                        },
-                        yAxis: {
-                            title: {
-                                text: "Water Height (m)"
-                            }
+                                text:"Values at between Lat 1: " +data.lat1+' and Lat 2: '+data.lat2,
+                                style: {
+                                    fontSize: '14px'
+                                }
+                            },
+                            xAxis: {
+                                type: 'datetime',
+                                labels: {
+                                    format: '{value:%d %b %Y}'
+                                    // rotation: 90,
+                                    // align: 'left'
+                                },
+                                title: {
+                                    text: 'Date'
+                                }
+                            },
+                            yAxis: {
+                                title: {
+                                    text: "Water Height (m)"
+                                }
 
-                        },
-                        exporting: {
-                            enabled: true
-                        },
-                        series: [{
-                            data:data.values,
-                            name: "Altimetry"
-                        }]
-                    });
-
+                            },
+                            exporting: {
+                                enabled: true
+                            },
+                            series: [{
+                                data:data.values,
+                                name: "Altimetry"
+                            }]
+                        });
+                    }else{
+                        $('.warning').html('<b>Sorry! There are no data values for the selected points. Please try another site.</b>');
+                        $loading.addClass('hidden');
+                        $("#plotter").addClass('hidden');
+                    }
 
                 }else{
                     console.log("ERROR");
