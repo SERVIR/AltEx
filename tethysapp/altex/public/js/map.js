@@ -409,6 +409,7 @@ var LIBRARY_OBJECT = (function() {
                 if("success" in data) {
                     // var json_response = JSON.parse(data);
                     $loading.addClass('hidden');
+
                     if(data.values.length > 0){
                         $("#plotter").removeClass('hidden');
                         Highcharts.stockChart('plotter',{
@@ -435,6 +436,8 @@ var LIBRARY_OBJECT = (function() {
                                 }
                             },
                             yAxis: {
+                                min: data.min_ht,
+                                max: data.max_ht,
                                 title: {
                                     text: "Water Height (m)"
                                 }

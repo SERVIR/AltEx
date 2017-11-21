@@ -16,7 +16,7 @@ def home(request):
                             end_date='3/15/2017',
                             start_view='decade',
                             today_button=False,
-                            initial='January 1, 2015')
+                            initial='January 1, 2008')
 
     end_date = DatePicker(name='end-date',
                           attributes={'id': 'end-date'},
