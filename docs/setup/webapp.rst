@@ -39,7 +39,7 @@ Prerequisites
 Install SciPy
 ~~~~~~~~~~~~~~~~~~
 
-Note: Before installing Psycopg2 into your python site-packages, activate
+Note: Before installing SciPy into your python site-packages, activate
 your Tethys conda environment using the alias `t`:
 
 ::
@@ -54,7 +54,7 @@ your Tethys conda environment using the alias `t`:
 Install netCDF4
 ~~~~~~~~~~~~~~~~~~
 
-Note: Before installing Psycopg2 into your python site-packages, activate
+Note: Before installing netCDF4 into your python site-packages, activate
 your Tethys conda environment using the alias `t`:
 
 ::
@@ -64,6 +64,20 @@ your Tethys conda environment using the alias `t`:
 ::
 
     (tethys)$ conda install -c conda-forge netCDF4
+
+Install numpy
+~~~~~~~~~~~~~~~~~~
+
+Note: Before installing numpy into your python site-packages, activate
+your Tethys conda environment using the alias `t`:
+
+::
+
+    $ t
+
+::
+
+    (tethys)$ conda install -c conda-forge numpy
 
 
 Web App Installation
