@@ -12,6 +12,7 @@ import scipy.io
 import netCDF4,os,sys,glob,scipy,zipfile
 import calendar
 import pickle
+import pandas as pd
 
 # Replace this with the path to the data directory
 JASON_DIR = '/home/dev/avisoftp.cnes.fr/AVISO/pub/jason-2/gdr_d'
@@ -104,13 +105,12 @@ def parse_netCDF(file,lat_range,geoid):
             return 'NULL'
 
         time_stamp = calendar.timegm(mjd.utctimetuple()) * 1000 # Converting date to utc timestamp for Highcharts
-
         ht = np.array(hght)
 
         height = ht - geoid  # Subtract the correction factor from the height
         height = np.nanmean(height) # Get the mean of the height
 
-        return time_stamp,height #Timestamp and height for Highcharts
+        return mjd,time_stamp,height #Timestamp and height for Highcharts
     else:
         return 'NULL'
 
@@ -121,6 +121,8 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
     lat_=(float(lat1)+float(lat2))/2
 
     corr = geoidalCorrection(lon_,lat_)
+    height = []
+    dt = []
 
     for dir in sorted(os.listdir(JASON_DIR)):
         working_dir = os.path.join(JASON_DIR,dir)
@@ -143,13 +145,22 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
                     if start_date <= pass_start_date <= pass_end_date <= end_date:
 
                         try:
-                            time_stamp,hgt = parse_netCDF(os.path.join(working_dir,file),[lat1,lat2],corr)
+                            mjd,time_stamp,hgt = parse_netCDF(os.path.join(working_dir,file),[lat1,lat2],corr)
                         except Exception: # If it returns NULL, move on to the next file.
                             continue
-                        ts_plot.append([time_stamp,round(float(hgt),3)]) # Return this to the frontend
+                        # ts_plot.append([time_stamp,round(float(hgt),3)]) # Return this to the frontend
+                        dt.append(time_stamp)
+                        height.append(round(float(hgt), 3))
+    #
+    if len(height) > 0:
+        all_data = pd.DataFrame(data={'time':dt,'water_level':height})
+        all_data.sort_values('time')
+        filter_data = all_data.loc[all_data['water_level'] > 0]
+        filter_data_std = filter_data.loc[np.abs(stats.zscore(filter_data['water_level'])) < 3]
+        ts_plot = list(filter_data_std.values.tolist())
 
     return ts_plot
 
-# calc_jason_ts('6.567022920438291','-0.22796630859374875','6.70343214627151','-0.27740478515624895','2008-01-01','2008-12-01','046')
+#calc_jason_ts('6.567022920438291','-0.22796630859374875','6.70343214627151','-0.27740478515624895','2008-01-01','2008-12-01','046')
 # calc_jason_ts('12.002012','105.481','12.019098','105.481','2008-01-01','2008-12-01','140')
 # calc_jason_ts('12.492662','104.483','12.533555','104.483','2008-01-01','2008-12-01','001')
