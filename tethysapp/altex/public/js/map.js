@@ -68,7 +68,7 @@ var LIBRARY_OBJECT = (function() {
 
         var jason2_layer = new ol.layer.Image({
             source: new ol.source.ImageWMS({
-                url: 'https://tethysdev.servirglobal.net:8181/geoserver/wms',
+                url: 'https://tethysdev.servirglobal.net/geoserver/wms',
                 params: {'LAYERS':'altex:Jason2_Ground_Track'},
                 serverType: 'geoserver',
                 crossOrigin: 'Anonymous'
@@ -87,7 +87,7 @@ var LIBRARY_OBJECT = (function() {
 
         var saral_layer = new ol.layer.Image({
             source: new ol.source.ImageWMS({
-                url: 'http://tethys.servirglobal.net:8181/geoserver/wms',
+                url: 'https://tethysdev.servirglobal.net/geoserver/wms',
                 params: {'LAYERS':'altex:SARAL_Ground_Track'},
                 serverType: 'geoserver',
                 crossOrigin: 'Anonymous'
