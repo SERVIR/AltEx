@@ -13,6 +13,22 @@ import netCDF4,os,sys,glob,scipy,zipfile
 import calendar
 import pickle
 import pandas as pd
+from sklearn.cluster import KMeans
+import multiprocessing as mp
+
+ncores = mp.cpu_count()
+
+if ncores < 4:
+    units = ncores
+
+elif ncores < 8:
+    units = 4
+
+elif ncores < 16:
+    units = 12
+
+else:
+    units = int(ncores/0.7)
 
 # Replace this with the path to the data directory
 JASON_DIR = '/home/dev/avisoftp.cnes.fr/AVISO/pub/jason-2/gdr_d'
@@ -26,8 +42,102 @@ def geoidalCorrection(lon_,lat_):
     corr = iy(lon_, lat_)[0]
     return corr
 
-# Extract the height and timestep from a filtered netCDF file
-def parse_netCDF(file,lat_range,geoid):
+def groupObs(series,position,times):
+    uniqVals = np.unique(position)
+    obs = []
+    dates = []
+    print(times)
+    for i in range(uniqVals.size):
+        key = int(uniqVals[i])
+        print(key)
+        if times[key] != None:
+            dates.append(times[key])
+        obs.append(np.mean(series[np.where(position==key)]))
+
+
+    return zip(*[dates,obs])
+
+
+def iqrFilter(series, position):
+    q1 = np.percentile(series, 25)
+    q3 = np.percentile(series, 75)
+
+    iqr = q3 - q1
+
+    lowerBound = q1 - (iqr * 1.5)
+    upperBound = q3 + (iqr * 1.5)
+
+    mask = np.where((series > lowerBound) & (series < upperBound))
+
+    return series[mask], position[mask]
+
+
+def cleanData(series,position):
+    nanMask = np.where(np.isnan(series)==False)
+    return series[nanMask],position[nanMask]
+
+
+def outlierRemoval(series, position, clusterRange=5, interCluster=0.3):
+    series, position = cleanData(series, position)
+
+    heights, position = iqrFilter(series, position)
+
+    diff = 10
+    labels = None
+
+    if heights.size > 5:
+
+        while diff > clusterRange:
+            kmeans = KMeans(init='k-means++', n_clusters=2, n_init=20)
+
+            X = np.vstack([heights.ravel(), heights.ravel()]).T
+
+            kmeans.fit(X)
+            clusters = kmeans.cluster_centers_.squeeze()[:, 0]
+
+            diff = np.abs(clusters[0] - clusters[1])
+
+            labels = kmeans.labels_
+
+            class1 = np.where(labels==0)
+            class2 = np.where(labels==1)
+
+            if len(class1[0]) > len(class2[0]):
+                idx = class1
+            else:
+                idx = class2
+
+            heights = heights[idx]
+            position = position[idx]
+
+
+
+        if len(class1[0]) > len(class2[0]):
+            clusterMean = clusters[0]
+        else:
+            clusterMean = clusters[1]
+
+        std = 1
+
+        while std > interCluster:
+            dist = np.abs(heights - clusterMean)
+            furthestIdx = np.argmax(dist)
+            keep = np.where(heights != heights[furthestIdx])
+            heights = heights[keep]
+            position = position[keep]
+
+            std = heights.std()
+
+        kmeans = None
+        finalSeries, finalPosition = iqrFilter(heights, position)
+
+    else:
+        finalSeries, finalPosition = heights, position
+
+    return finalSeries, finalPosition
+
+def parse_netCDF(args):
+    file, lat_range, counter = args['file'], args['lat_range'], args['counter']
 
     data = Dataset(file)
     nc_dims = [dim for dim in data.dimensions]
@@ -59,6 +169,8 @@ def parse_netCDF(file,lat_range,geoid):
     ice_range_20hz_ku = data.variables['ice_range_20hz_ku'][lat1_idx:lat2_idx]
     ice_sig0_20hz_ku = data.variables['ice_sig0_20hz_ku'][lat1_idx:lat2_idx]
     ice_qual_flag_20hz_ku = data.variables['ice_qual_flag_20hz_ku'][lat1_idx:lat2_idx]
+    lons = lon_20hz[lat1_idx:lat2_idx]
+    lats = lat_20hz[lat1_idx:lat2_idx]
 
     time_20hz_units = data.variables['time_20hz'].units
 
@@ -90,7 +202,9 @@ def parse_netCDF(file,lat_range,geoid):
             mjd_20hz.append(time_20hz[i, j])
             latd.append(lat_20hz[i, j])
             longt.append(lon_20hz[i, j])
-            hght.append(alt_20hz[i, j] - (media_corr + ice_range_20hz_ku[i, j]))
+            gc = geoidalCorrection(lons[i, j], lats[i, j])
+
+            hght.append(alt_20hz[i, j] - (media_corr + ice_range_20hz_ku[i, j]) - gc - 0.7)
             bs.append(ice_sig0_20hz_ku[i, j])
 
     # Check to make sure that the distance between is the points is sufficient
@@ -102,28 +216,27 @@ def parse_netCDF(file,lat_range,geoid):
         try:
             mjd = netCDF4.num2date(mjd_20hz, time_20hz_units, calendar='gregorian')
         except Exception:
-            return 'NULL'
+            return None
 
-        time_stamp = calendar.timegm(mjd.utctimetuple()) * 1000 # Converting date to utc timestamp for Highcharts
+        time_stamp = calendar.timegm(mjd.utctimetuple()) * 1000  # Converting date to utc timestamp for Highcharts
         ht = np.array(hght)
+        tIndex = np.full(ht.shape, int(counter))
 
-        height = ht - geoid  # Subtract the correction factor from the height
-        height = np.nanmean(height) # Get the mean of the height
-
-        return mjd,time_stamp,height #Timestamp and height for Highcharts
+        return int(time_stamp), ht.astype(np.float), tIndex.astype(np.uint)  # Timestamp and height for Highcharts
     else:
-        return 'NULL'
+        return None
+
 
 def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
-
+    # Extract the height and timestep from a filtered netCDF file
     ts_plot = []
-    lon_=(float(lon1)+float(lon2))/2
-    lat_=(float(lat1)+float(lat2))/2
 
-    corr = geoidalCorrection(lon_,lat_)
     height = []
     dt = []
-
+    counter = 0
+    gHtArray = np.array([])
+    gTArray = np.array([])
+    fList = []
     for dir in sorted(os.listdir(JASON_DIR)):
         working_dir = os.path.join(JASON_DIR,dir)
 
@@ -145,19 +258,45 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
                     if start_date <= pass_start_date <= pass_end_date <= end_date:
 
                         try:
-                            mjd,time_stamp,hgt = parse_netCDF(os.path.join(working_dir,file),[lat1,lat2],corr)
+                            fList.append([os.path.join(working_dir,file),[lat1,lat2],counter])
+                            counter +=1
                         except Exception: # If it returns NULL, move on to the next file.
                             continue
                         # ts_plot.append([time_stamp,round(float(hgt),3)]) # Return this to the frontend
-                        dt.append(time_stamp)
-                        height.append(round(float(hgt), 3))
-    #
-    if len(height) > 0:
-        all_data = pd.DataFrame(data={'time':dt,'water_level':height})
-        all_data.sort_values('time')
-        filter_data = all_data.loc[all_data['water_level'] > 0]
-        filter_data_std = filter_data.loc[np.abs(stats.zscore(filter_data['water_level'])) < 3]
-        ts_plot = list(filter_data_std.values.tolist())
+
+    pool = mp.Pool(units)
+    args = [{'file': i[0], 'lat_range': i[1], 'counter': i[2]} for i in fList]
+    results = pool.map_async(parse_netCDF,args).get()
+    # pool.close()
+    # pool.join()
+    dt,gHtArray,gTArray = [], np.array([]) ,np.array([])
+
+    for i in results:
+        if i != None:
+            dt.append(i[0])
+            gHtArray = np.append(gHtArray,i[1])
+            gTArray = np.append(gTArray,i[2])
+        else:
+            dt.append(None)
+
+    try:
+        gHtArray = gHtArray.astype(np.float)
+        gTArray = gTArray.astype(np.uint)
+    except ValueError:
+        outH = []
+        outT = []
+        for i in range(gHtArray.size):
+            try:
+                outH.append(np.float(gHtArray[i]))
+                outT.append(np.uint(gTArray[i]))
+            except:
+                pass
+        gHtArray = np.array(outH,dtype=np.float)
+        gTArray = np.array(outT,dtype=np.uint)
+
+    if len(dt) > 0:
+        series, position = outlierRemoval(gHtArray, gTArray)
+        ts_plot = groupObs(series,position,dt)
 
     return ts_plot
 

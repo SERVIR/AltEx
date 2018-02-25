@@ -28,7 +28,6 @@ def timeseries(request):
                 ts_plot = calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track)
                 max_height = max(ts_plot, key=lambda x: x[1])
                 min_height = min(ts_plot, key=lambda x: x[1])
-
                 return_obj["max_ht"] = max_height[1]
                 return_obj["min_ht"] = min_height[1]
                 return_obj["values"] = ts_plot
