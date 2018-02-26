@@ -245,41 +245,46 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
                     if start_date <= pass_start_date <= pass_end_date <= end_date:
 
                         try:
-                            fList.append([os.path.join(working_dir,file),[lat1,lat2],counter])
+                            args = {'file': os.path.join(working_dir,file), 'lat_range': [lat1,lat2], 'counter': counter}
+                            results = parse_netCDF(args)
+                            dt.append(results[0])
+                            gHtArray = np.append(gHtArray,results[1])
+                            gTArray = np.append(gTArray,results[2])
+                            # fList.append([os.path.join(working_dir,file),[lat1,lat2],counter])
                             counter +=1
                         except Exception: # If it returns NULL, move on to the next file.
                             continue
                         # ts_plot.append([time_stamp,round(float(hgt),3)]) # Return this to the frontend
 
-    ncores = mp.cpu_count()
-    global THREAD_POOL
-
-    if ncores < 4:
-        THREAD_POOL = ncores
-
-    elif ncores < 8:
-        THREAD_POOL = 4
-
-    elif ncores < 16:
-        THREAD_POOL = 12
-
-    else:
-        THREAD_POOL = int(ncores / 0.7)
-
-    pool = mp.Pool(THREAD_POOL)
-    args = [{'file': i[0], 'lat_range': i[1], 'counter': i[2]} for i in fList]
-    results = pool.map(parse_netCDF,args)
-    # pool.close()
-    # pool.join()
-    dt,gHtArray,gTArray = [], np.array([]) ,np.array([])
-
-    for i in results:
-        if i != None:
-            dt.append(i[0])
-            gHtArray = np.append(gHtArray,i[1])
-            gTArray = np.append(gTArray,i[2])
-        else:
-            dt.append(None)
+    # ncores = mp.cpu_count()
+    # global THREAD_POOL
+    #
+    # if ncores < 4:
+    #     THREAD_POOL = ncores
+    #
+    # elif ncores < 8:
+    #     THREAD_POOL = 4
+    #
+    # elif ncores < 16:
+    #     THREAD_POOL = 12
+    #
+    # else:
+    #     THREAD_POOL = int(ncores / 0.7)
+    #
+    # pool = mp.Pool(THREAD_POOL)
+    # args = [{'file': i[0], 'lat_range': i[1], 'counter': i[2]} for i in fList]
+    # results = pool.map(parse_netCDF,args)
+    # # pool.close()
+    # # pool.join()
+    # dt,gHtArray,gTArray = [], np.array([]) ,np.array([])
+    #
+    # for i in results:
+    #     if i != None:
+    #         dt.append(i[0])
+    #         gHtArray = np.append(gHtArray,i[1])
+    #         gTArray = np.append(gTArray,i[2])
+    #     else:
+    #         dt.append(None)
 
     try:
         gHtArray = gHtArray.astype(np.float)
