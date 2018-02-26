@@ -16,19 +16,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 import multiprocessing as mp
 
-ncores = mp.cpu_count()
-
-if ncores < 4:
-    units = ncores
-
-elif ncores < 8:
-    units = 4
-
-elif ncores < 16:
-    units = 12
-
-else:
-    units = int(ncores/0.7)
+global THREAD_POOL
 
 # Replace this with the path to the data directory
 JASON_DIR = '/home/dev/avisoftp.cnes.fr/AVISO/pub/jason-2/gdr_d'
@@ -46,10 +34,10 @@ def groupObs(series,position,times):
     uniqVals = np.unique(position)
     obs = []
     dates = []
-    print(times)
+
     for i in range(uniqVals.size):
         key = int(uniqVals[i])
-        print(key)
+
         if times[key] != None:
             dates.append(times[key])
         obs.append(np.mean(series[np.where(position==key)]))
@@ -226,7 +214,6 @@ def parse_netCDF(args):
     else:
         return None
 
-
 def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
     # Extract the height and timestep from a filtered netCDF file
     ts_plot = []
@@ -264,9 +251,24 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
                             continue
                         # ts_plot.append([time_stamp,round(float(hgt),3)]) # Return this to the frontend
 
-    pool = mp.Pool(units)
+    ncores = mp.cpu_count()
+    global THREAD_POOL
+
+    if ncores < 4:
+        THREAD_POOL = ncores
+
+    elif ncores < 8:
+        THREAD_POOL = 4
+
+    elif ncores < 16:
+        THREAD_POOL = 12
+
+    else:
+        THREAD_POOL = int(ncores / 0.7)
+
+    pool = mp.Pool(THREAD_POOL)
     args = [{'file': i[0], 'lat_range': i[1], 'counter': i[2]} for i in fList]
-    results = pool.map_async(parse_netCDF,args).get()
+    results = pool.map(parse_netCDF,args)
     # pool.close()
     # pool.join()
     dt,gHtArray,gTArray = [], np.array([]) ,np.array([])

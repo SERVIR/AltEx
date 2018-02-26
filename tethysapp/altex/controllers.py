@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from tethys_sdk.gizmos import *
-from jason import geoidalCorrection
+
 
 def home(request):
     """
