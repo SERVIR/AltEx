@@ -18,11 +18,15 @@ var LIBRARY_OBJECT = (function() {
      *                      MODULE LEVEL / GLOBAL VARIABLES
      *************************************************************************/
     var current_layer,
+        gs_wms_workspace,
+        gs_wms_url,
+        jason2_store,
+        saral_store,
         layers,
         $loading,
         map,
-        public_interface;				// Object returned by the module
-
+        public_interface,				// Object returned by the module
+        variable_data;
     /************************************************************************
      *                    PRIVATE FUNCTION DECLARATIONS
      *************************************************************************/
@@ -39,6 +43,14 @@ var LIBRARY_OBJECT = (function() {
     init_vars = function(){
         var $layers_element = $('#layers');
         $loading = $('#view-file-loading');
+        var $var_element = $("#variable");
+        // variable_data = $var_element.attr('data-variable-info');
+        // variable_data = JSON.parse(variable_data);
+        gs_wms_url = $var_element.attr('data-geoserver-url');
+        // wms_url = JSON.parse(wms_url);
+        gs_wms_workspace = $var_element.attr('data-geoserver-workspace');
+        jason2_store = $var_element.attr('data-jason2-store');
+        saral_store = $var_element.attr('data-saral-store');
 
     };
 
@@ -69,8 +81,8 @@ var LIBRARY_OBJECT = (function() {
         var jason2_layer = new ol.layer.Image({
             source: new ol.source.ImageWMS({
                 // url: 'http://tethys.servirglobal.net:8181/geoserver/wms',
-                url: 'https://tethysdev.servirglobal.net/geoserver/wms',
-                params: {'LAYERS':'altex:Jason2_Ground_Track'},
+                url: gs_wms_url,
+                params: {'LAYERS':gs_wms_workspace+':'+jason2_store},
                 serverType: 'geoserver',
                 crossOrigin: 'Anonymous'
             })
@@ -88,8 +100,8 @@ var LIBRARY_OBJECT = (function() {
 
         var saral_layer = new ol.layer.Image({
             source: new ol.source.ImageWMS({
-                url: 'https://tethysdev.servirglobal.net/geoserver/wms',
-                params: {'LAYERS':'altex:SARAL_Ground_Track'},
+                url: gs_wms_url,
+                params: {'LAYERS':gs_wms_workspace+':'+jason2_store},
                 serverType: 'geoserver',
                 crossOrigin: 'Anonymous'
             })
@@ -392,6 +404,12 @@ var LIBRARY_OBJECT = (function() {
                 $("#plotter").addClass('hidden');
                 return false;
             }
+            if((start_date == "") || (end_date == "")){
+                $('.warning').html('<b>Please select a start/end date before submitting.</b>');
+                $loading.addClass('hidden');
+                $("#plotter").addClass('hidden');
+                return false;
+            }
 
             var lwr_pt = point1.split(",");
             var upr_pt = point2.split(",");
@@ -415,7 +433,7 @@ var LIBRARY_OBJECT = (function() {
                         $("#plotter").removeClass('hidden');
                         Highcharts.stockChart('plotter',{
                             chart: {
-                                type:'area',
+                                type:'spline',
                                 zoomType: 'x',
                                 height: 350
                             },
@@ -425,12 +443,22 @@ var LIBRARY_OBJECT = (function() {
                                     fontSize: '14px'
                                 }
                             },
+                            // xAxis: {
+                            //     type: 'datetime',
+                            //     labels: {
+                            //         format: '{value:%d %b %Y}'
+                            //         // rotation: 90,
+                            //         // align: 'left'
+                            //     },
+                            //     title: {
+                            //         text: 'Date'
+                            //     }
+                            // },
                             xAxis: {
                                 type: 'datetime',
-                                labels: {
-                                    format: '{value:%d %b %Y}'
-                                    // rotation: 90,
-                                    // align: 'left'
+                                dateTimeLabelFormats: { // don't display the dummy year
+                                    month: '%e. %b',
+                                    year: '%b'
                                 },
                                 title: {
                                     text: 'Date'
@@ -459,8 +487,9 @@ var LIBRARY_OBJECT = (function() {
                     }
 
                 }else{
-                    console.log("ERROR");
-
+                    $('.warning').html('<b>'+data.error+'</b>');
+                    $loading.addClass('hidden');
+                    $("#plotter").addClass('hidden');
                 }
             });
         });

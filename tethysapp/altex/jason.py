@@ -14,12 +14,9 @@ import calendar
 import pickle
 import pandas as pd
 from sklearn.cluster import KMeans
-import multiprocessing as mp
+from config import JASON2_DIR,JASON3_DIR
 
 global THREAD_POOL
-
-# Replace this with the path to the data directory
-JASON_DIR = '/home/dev/avisoftp.cnes.fr/AVISO/pub/jason-2/gdr_d'
 
 geoid_grid_file = inspect.getfile(inspect.currentframe()).replace('jason.py','public/data/geoidegm2008grid.mat')
 x = loadmat(geoid_grid_file)
@@ -67,23 +64,21 @@ def cleanData(series,position):
 
 def outlierRemoval(series, position, clusterRange=5, interCluster=0.3):
     series, position = cleanData(series, position)
-
+    # print 1,series,position
     heights, position = iqrFilter(series, position)
-
+    # print 2,heights,position
     diff = 10
     labels = None
 
     if heights.size > 5:
 
         while diff > clusterRange:
-            kmeans = KMeans(init='k-means++', n_clusters=2, n_init=20)
+            kmeans = KMeans(init='k-means++', n_clusters=2, n_init=10)
 
             X = np.vstack([heights.ravel(), heights.ravel()]).T
 
             kmeans.fit(X)
             clusters = kmeans.cluster_centers_.squeeze()[:, 0]
-
-            diff = np.abs(clusters[0] - clusters[1])
 
             labels = kmeans.labels_
 
@@ -97,15 +92,12 @@ def outlierRemoval(series, position, clusterRange=5, interCluster=0.3):
 
             heights = heights[idx]
             position = position[idx]
+            diff = np.abs(clusters[0] - clusters[1])
 
 
+        clusterMean = heights.mean()
 
-        if len(class1[0]) > len(class2[0]):
-            clusterMean = clusters[0]
-        else:
-            clusterMean = clusters[1]
-
-        std = 1
+        std = heights.std()
 
         while std > interCluster:
             dist = np.abs(heights - clusterMean)
@@ -128,37 +120,44 @@ def parse_netCDF(args):
     file, lat_range, counter = args['file'], args['lat_range'], args['counter']
 
     data = Dataset(file)
-    nc_dims = [dim for dim in data.dimensions]
 
-    hz = len(data.dimensions[nc_dims[1]])
-    time = data.variables['time'][:]
+    # time = data.variables['time'][:]
 
-    time_20hz = data.variables['time_20hz'][:]
-    lon_20hz = data.variables['lon_20hz'][:]
-    lat_20hz = data.variables['lat_20hz'][:]
-    lon = data.variables['lon'][:]
-    lat = data.variables['lat'][:]
+    time_20hz = data.variables['time_20hz'][:].ravel()
+    lon_20hz = data.variables['lon_20hz'][:].ravel()
+    lat_20hz = data.variables['lat_20hz'][:].ravel()
+    # lon = data.variables['lon'][:].ravel()
+    lat = data.variables['lat'][:].ravel()
 
-    lat1_idx = (np.abs(lat - float(lat_range[0]))).argmin()
-    lat2_idx = (np.abs(lat - float(lat_range[1]))).argmin()
+    if float(lat_range[0]) > float(lat_range[1]):
+        tmp = lat_range[0]
+        lat_range[0] = lat_range[1]
+        lat_range[1] = tmp
 
-    if lat2_idx < lat1_idx:
-        tmp = lat1_idx
-        lat1_idx = lat2_idx
-        lat2_idx = tmp
+    latidx = np.where((lat >= float(lat_range[0])) & (lat <= float(lat_range[1])))
+    latidx_2d = np.where((lat_20hz >= float(lat_range[0])) & (lat_20hz <= float(lat_range[1])))
 
-    alt_state_flag_ku_band_status = data.variables['alt_state_flag_ku_band_status'][lat1_idx:lat2_idx]
-    alt_20hz = data.variables['alt_20hz'][lat1_idx:lat2_idx]
-    model_dry_tropo_corr = data.variables['model_dry_tropo_corr'][lat1_idx:lat2_idx]
-    model_wet_tropo_corr = data.variables['model_wet_tropo_corr'][lat1_idx:lat2_idx]
-    iono_corr_gim_ku = data.variables['iono_corr_gim_ku'][lat1_idx:lat2_idx]
-    solid_earth_tide = data.variables['solid_earth_tide'][lat1_idx:lat2_idx]
-    pole_tide = data.variables['pole_tide'][lat1_idx:lat2_idx]
-    ice_range_20hz_ku = data.variables['ice_range_20hz_ku'][lat1_idx:lat2_idx]
-    ice_sig0_20hz_ku = data.variables['ice_sig0_20hz_ku'][lat1_idx:lat2_idx]
-    ice_qual_flag_20hz_ku = data.variables['ice_qual_flag_20hz_ku'][lat1_idx:lat2_idx]
-    lons = lon_20hz[lat1_idx:lat2_idx]
-    lats = lat_20hz[lat1_idx:lat2_idx]
+    if len(latidx[0]) == 0:
+        offset = latidx_2d[0]%20
+
+        if 0 in offset:
+            latidx = np.array([latidx_2d[0][offset.tolist().index(0)] / 20])
+        else:
+            latidx = np.array([(latidx_2d[0][0] - offset[0]) / 20])
+
+    alt_state_flag_ku_band_status = data.variables['alt_state_flag_ku_band_status'][latidx]
+    alt_20hz = data.variables['alt_20hz'][:].ravel()[latidx_2d]
+    model_dry_tropo_corr = data.variables['model_dry_tropo_corr'][latidx]
+    model_wet_tropo_corr = data.variables['model_wet_tropo_corr'][latidx]
+    iono_corr_gim_ku = data.variables['iono_corr_gim_ku'][latidx]
+    solid_earth_tide = data.variables['solid_earth_tide'][latidx]
+    pole_tide = data.variables['pole_tide'][latidx]
+    ice_range_20hz_ku = data.variables['ice_range_20hz_ku'][:].ravel()[latidx_2d]
+    ice_sig0_20hz_ku = data.variables['ice_sig0_20hz_ku'][:].ravel()[latidx_2d]
+    ice_qual_flag_20hz_ku = data.variables['ice_qual_flag_20hz_ku'][:].ravel()[latidx_2d]
+
+    lons = lon_20hz[latidx_2d]
+    lats = lat_20hz[latidx_2d]
 
     time_20hz_units = data.variables['time_20hz'].units
 
@@ -169,6 +168,15 @@ def parse_netCDF(args):
     longt = []
     latd = []
     bs = []
+    cnt = 0
+    idxcounter = 0
+
+    leftover = (lats.size - cnt)%20
+
+
+    if len(alt_state_flag_ku_band_status) > 0:
+        if len(alt_20hz) > len(alt_state_flag_ku_band_status)*20:
+            leftover = leftover + 20
 
     for i in range(0, dim_size):
 
@@ -179,33 +187,35 @@ def parse_netCDF(args):
         media_corr = model_dry_tropo_corr[i] + model_wet_tropo_corr[i] + iono_corr_gim_ku[i] + solid_earth_tide[i] + \
                      pole_tide[i]
 
+        if i == dim_size-1:
+            hz = leftover
+        else:
+            hz = 20
+
         for j in range(0, hz):
 
-            if ice_qual_flag_20hz_ku[i, j] != 0:
+            if ice_qual_flag_20hz_ku[idxcounter] != 0:
                 continue
 
-            if lon_20hz[i, j] == 'nan':
-                continue
+            # if lon_20hz[i, j] == 'nan':
+            #     continue
 
-            mjd_20hz.append(time_20hz[i, j])
-            latd.append(lat_20hz[i, j])
-            longt.append(lon_20hz[i, j])
-            gc = geoidalCorrection(lons[i, j], lats[i, j])
+            if np.ma.is_masked(time_20hz[idxcounter]) == False:
+                # print 'd2d23d;',time_20hz[idxcounter]
+                mjd_20hz.append(time_20hz[idxcounter])
 
-            hght.append(alt_20hz[i, j] - (media_corr + ice_range_20hz_ku[i, j]) - gc - 0.7)
-            bs.append(ice_sig0_20hz_ku[i, j])
+            gc = geoidalCorrection(lons[idxcounter], lats[idxcounter])
+
+            hght.append(alt_20hz[idxcounter] - (media_corr + ice_range_20hz_ku[idxcounter]) - gc - 0.7)
+            bs.append(ice_sig0_20hz_ku[idxcounter])
+            cnt+=1
+            idxcounter+=1
 
     # Check to make sure that the distance between is the points is sufficient
-    if len(latd) > 0:
-
-        mjd_20hz = (np.array(mjd_20hz)).mean()
-
-        # At times the date is out of range, a hack to get around that.
-        try:
-            mjd = netCDF4.num2date(mjd_20hz, time_20hz_units, calendar='gregorian')
-        except Exception:
-            return None
-
+    # if len(latd) > 0:
+    if len(mjd_20hz) > 0:
+        mjd_20hz = np.mean(np.array(mjd_20hz))
+        mjd = netCDF4.num2date(mjd_20hz, time_20hz_units, calendar='gregorian')
         time_stamp = calendar.timegm(mjd.utctimetuple()) * 1000  # Converting date to utc timestamp for Highcharts
         ht = np.array(hght)
         tIndex = np.full(ht.shape, int(counter))
@@ -214,7 +224,7 @@ def parse_netCDF(args):
     else:
         return None
 
-def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
+def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
     # Extract the height and timestep from a filtered netCDF file
     ts_plot = []
 
@@ -224,6 +234,14 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
     gHtArray = np.array([])
     gTArray = np.array([])
     fList = []
+    # start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+    # end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+    JASON_DIR = None
+    if sensor == 'jason2':
+        JASON_DIR = JASON2_DIR
+    elif sensor == 'jason3':
+        JASON_DIR = JASON3_DIR
+
     for dir in sorted(os.listdir(JASON_DIR)):
         working_dir = os.path.join(JASON_DIR,dir)
 
@@ -248,12 +266,15 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
                             args = {'file': os.path.join(working_dir,file), 'lat_range': [lat1,lat2], 'counter': counter}
                             results = parse_netCDF(args)
                             dt.append(results[0])
-                            gHtArray = np.append(gHtArray,results[1])
-                            gTArray = np.append(gTArray,results[2])
+                            gHtArray = np.append(gHtArray, results[1])
+                            gTArray = np.append(gTArray, results[2])
                             # fList.append([os.path.join(working_dir,file),[lat1,lat2],counter])
-                            counter +=1
+                            counter += 1
+                        # break
                         except Exception: # If it returns NULL, move on to the next file.
                             continue
+
+
                         # ts_plot.append([time_stamp,round(float(hgt),3)]) # Return this to the frontend
 
     # ncores = mp.cpu_count()
@@ -302,11 +323,12 @@ def calc_jason_ts(lat1,lon1,lat2,lon2,start_date,end_date,track):
         gTArray = np.array(outT,dtype=np.uint)
 
     if len(dt) > 0:
+        # print 'Original',gHtArray,gTArray
         series, position = outlierRemoval(gHtArray, gTArray)
         ts_plot = groupObs(series,position,dt)
 
     return ts_plot
 
-#calc_jason_ts('6.567022920438291','-0.22796630859374875','6.70343214627151','-0.27740478515624895','2008-01-01','2008-12-01','046')
+# calc_jason_ts('6.567022920438291','-0.22796630859374875','6.70343214627151','-0.27740478515624895','2008-01-01','2008-12-01','046')
 # calc_jason_ts('12.002012','105.481','12.019098','105.481','2008-01-01','2008-12-01','140')
-# calc_jason_ts('12.492662','104.483','12.533555','104.483','2008-01-01','2008-12-01','001')
+# calc_jason_ts('12.515050883512345','104.47629158353095','12.52665571422412','104.48084061002022','2008-01-01','2008-12-01','001')
