@@ -24,17 +24,17 @@ def timeseries(request):
         end_date = datetime.datetime.strptime(end_date, '%B %d, %Y')  #.strftime('%d/%m/%Y')
 
         if sensor_name == 'jason2' or sensor_name == 'jason3':
-            try:
-                ts_plot = calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor_name)
-                max_height = max(ts_plot, key=lambda x: x[1])
-                min_height = min(ts_plot, key=lambda x: x[1])
-                return_obj["max_ht"] = max_height[1]
-                return_obj["min_ht"] = min_height[1]
-                return_obj["values"] = ts_plot
-                return_obj["lat1"] = round(float(lat1),2)
-                return_obj["lat2"] = round(float(lat2),2)
-                return_obj["success"] = "success"
-            except Exception as e:
-                return_obj["error"] = "Error Processing Request. Error: "+ str(e)
+            # try:
+            ts_plot = calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor_name)
+            max_height = max(ts_plot, key=lambda x: x[1])
+            min_height = min(ts_plot, key=lambda x: x[1])
+            return_obj["max_ht"] = max_height[1]
+            return_obj["min_ht"] = min_height[1]
+            return_obj["values"] = ts_plot
+            return_obj["lat1"] = round(float(lat1),2)
+            return_obj["lat2"] = round(float(lat2),2)
+            return_obj["success"] = "success"
+            # except Exception as e:
+            #     return_obj["error"] = "Error Processing Request. Error: "+ str(e)
 
     return JsonResponse(return_obj)

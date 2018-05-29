@@ -443,6 +443,9 @@ var LIBRARY_OBJECT = (function() {
                                     fontSize: '14px'
                                 }
                             },
+                            tooltip: {
+                                xDateFormat: '%Y-%m-%d'
+                            },
                             // xAxis: {
                             //     type: 'datetime',
                             //     labels: {
