@@ -6,10 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="99c8bedb-78d3-4b06-87fa-ffa5df20e52b" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tethysapp/altex/ajax_controllers.py" afterPath="$PROJECT_DIR$/tethysapp/altex/ajax_controllers.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tethysapp/altex/config.py" afterPath="$PROJECT_DIR$/tethysapp/altex/config.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tethysapp/altex/jason.py" afterPath="$PROJECT_DIR$/tethysapp/altex/jason.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tethysapp/altex/public/js/map.js" afterPath="$PROJECT_DIR$/tethysapp/altex/public/js/map.js" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -34,7 +32,7 @@
       <file leaf-file-name="controllers.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tethysapp/altex/controllers.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="864">
+            <state relative-caret-position="810">
               <caret line="48" column="28" lean-forward="false" selection-start-line="48" selection-start-column="9" selection-end-line="48" selection-end-column="28" />
               <folding>
                 <element signature="e#0#35#0" expanded="true" />
@@ -46,21 +44,9 @@
       <file leaf-file-name="config.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tethysapp/altex/config.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="36">
-              <caret line="2" column="38" lean-forward="false" selection-start-line="2" selection-start-column="38" selection-end-line="2" selection-end-column="38" />
+            <state relative-caret-position="108">
+              <caret line="6" column="0" lean-forward="true" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
               <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ajax_controllers.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tethysapp/altex/ajax_controllers.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="30" column="30" lean-forward="true" selection-start-line="30" selection-start-column="30" selection-end-line="30" selection-end-column="30" />
-              <folding>
-                <element signature="e#0#11#0" expanded="true" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -80,11 +66,10 @@
       <file leaf-file-name="jason.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/tethysapp/altex/jason.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="663">
-              <caret line="150" column="23" lean-forward="true" selection-start-line="150" selection-start-column="23" selection-end-line="150" selection-end-column="23" />
+            <state relative-caret-position="639">
+              <caret line="428" column="0" lean-forward="true" selection-start-line="428" selection-start-column="0" selection-end-line="428" selection-end-column="0" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
-                <marker date="1527620180263" expanded="true" signature="12794:12984" ph="..." />
               </folding>
             </state>
           </provider>
@@ -117,10 +102,22 @@
       <file leaf-file-name="map.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tethysapp/altex/public/js/map.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="8208">
+            <state relative-caret-position="8316">
               <caret line="462" column="9" lean-forward="false" selection-start-line="462" selection-start-column="9" selection-end-line="462" selection-end-column="9" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ajax_controllers.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/tethysapp/altex/ajax_controllers.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="378">
+              <caret line="21" column="36" lean-forward="false" selection-start-line="21" selection-start-column="36" selection-end-line="21" selection-end-column="36" />
+              <folding>
+                <element signature="e#0#11#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -148,6 +145,7 @@
       <find>print</find>
       <find>time_20hz_unit</find>
       <find>try</find>
+      <find>groupobs</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -171,8 +169,8 @@
         <option value="$PROJECT_DIR$/tethysapp/altex/api.py" />
         <option value="$PROJECT_DIR$/tethysapp/altex/controllers.py" />
         <option value="$PROJECT_DIR$/tethysapp/altex/public/js/map.js" />
-        <option value="$PROJECT_DIR$/tethysapp/altex/config.py" />
         <option value="$PROJECT_DIR$/tethysapp/altex/ajax_controllers.py" />
+        <option value="$PROJECT_DIR$/tethysapp/altex/config.py" />
         <option value="$PROJECT_DIR$/tethysapp/altex/jason.py" />
       </list>
     </option>
@@ -186,8 +184,8 @@
   <component name="ProjectFrameBounds">
     <option name="x" value="64" />
     <option name="y" value="-11" />
-    <option name="width" value="2497" />
-    <option name="height" value="1347" />
+    <option name="width" value="1857" />
+    <option name="height" value="987" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -391,7 +389,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="64" y="-11" width="2497" height="1347" extended-state="6" />
+    <frame x="64" y="-11" width="1857" height="987" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25733817" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -423,7 +421,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="2" />
+      <option name="time" value="4" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -458,7 +456,6 @@
           <caret line="160" column="0" lean-forward="true" selection-start-line="160" selection-start-column="0" selection-end-line="160" selection-end-column="0" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
-            <marker date="1527620180263" expanded="true" signature="12794:12984" ph="..." />
           </folding>
         </state>
       </provider>
@@ -551,7 +548,6 @@
           <caret line="165" column="18" lean-forward="true" selection-start-line="165" selection-start-column="18" selection-end-line="165" selection-end-column="18" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
-            <marker date="1527620180263" expanded="true" signature="12794:12984" ph="..." />
           </folding>
         </state>
       </provider>
@@ -580,7 +576,6 @@
           <caret line="148" column="60" lean-forward="true" selection-start-line="148" selection-start-column="60" selection-end-line="148" selection-end-column="60" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
-            <marker date="1527620180263" expanded="true" signature="12794:12984" ph="..." />
           </folding>
         </state>
       </provider>
@@ -766,31 +761,11 @@
     <entry file="file://$PROJECT_DIR$/tethysapp/altex/altexOutlierRemoval.py" />
     <entry file="file://$PROJECT_DIR$/tethysapp/altex/jason_dask.py" />
     <entry file="file://$PROJECT_DIR$/tethysapp/altex/jason_copy.py" />
-    <entry file="file://$PROJECT_DIR$/tethysapp/altex/api.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="36">
-          <caret line="2" column="19" lean-forward="false" selection-start-line="2" selection-start-column="19" selection-end-line="2" selection-end-column="19" />
-          <folding>
-            <element signature="e#0#36#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tethysapp/altex/app.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="684">
           <caret line="38" column="31" lean-forward="false" selection-start-line="38" selection-start-column="31" selection-end-line="38" selection-end-column="31" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tethysapp/altex/public/js/map.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="8208">
-          <caret line="462" column="9" lean-forward="false" selection-start-line="462" selection-start-column="9" selection-end-line="462" selection-end-column="9" />
-          <folding>
-            <element signature="n#!!doc" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -814,17 +789,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tethysapp/altex/config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="36">
-          <caret line="2" column="38" lean-forward="false" selection-start-line="2" selection-start-column="38" selection-end-line="2" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tethysapp/altex/controllers.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="864">
+        <state relative-caret-position="810">
           <caret line="48" column="28" lean-forward="false" selection-start-line="48" selection-start-column="9" selection-end-line="48" selection-end-column="28" />
           <folding>
             <element signature="e#0#35#0" expanded="true" />
@@ -832,23 +799,50 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tethysapp/altex/api.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="36">
+          <caret line="2" column="19" lean-forward="false" selection-start-line="2" selection-start-column="19" selection-end-line="2" selection-end-column="19" />
+          <folding>
+            <element signature="e#0#36#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tethysapp/altex/ajax_controllers.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="30" column="30" lean-forward="true" selection-start-line="30" selection-start-column="30" selection-end-line="30" selection-end-column="30" />
+        <state relative-caret-position="378">
+          <caret line="21" column="36" lean-forward="false" selection-start-line="21" selection-start-column="36" selection-end-line="21" selection-end-column="36" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tethysapp/altex/public/js/map.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8316">
+          <caret line="462" column="9" lean-forward="false" selection-start-line="462" selection-start-column="9" selection-end-line="462" selection-end-column="9" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tethysapp/altex/config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="6" column="0" lean-forward="true" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tethysapp/altex/jason.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="663">
-          <caret line="150" column="23" lean-forward="true" selection-start-line="150" selection-start-column="23" selection-end-line="150" selection-end-column="23" />
+        <state relative-caret-position="639">
+          <caret line="428" column="0" lean-forward="true" selection-start-line="428" selection-start-column="0" selection-end-line="428" selection-end-column="0" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
-            <marker date="1527620180263" expanded="true" signature="12794:12984" ph="..." />
           </folding>
         </state>
       </provider>

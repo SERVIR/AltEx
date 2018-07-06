@@ -44,6 +44,23 @@ def groupObs(series,position,times,start_date,end_date):
 
     return zip(*[dates,obs])
 
+def groupObsNew(series,position,times,start_date,end_date):
+    uniqVals = np.unique(position)
+    obs = []
+    dates = []
+    start_date = calendar.timegm(start_date.utctimetuple()) * 1000
+    end_date = calendar.timegm(end_date.utctimetuple()) * 1000
+    series = np.array(series)
+    position = np.array(position)
+    for i in range(uniqVals.size):
+        key = int(uniqVals[i])
+        if times[key] != None:
+            if start_date <= times[key] <= end_date:
+                dates.append(times[key])
+        obs.append(np.mean(series[np.where(position==key)]))
+
+    return zip(*[dates,obs])
+
 
 def iqrFilter(series, position):
     q1 = np.percentile(series, 25)
@@ -71,7 +88,8 @@ def outlierRemoval(series, position, clusterRange=5, interCluster=0.3):
     # print 1,series,position
     heights, position = iqrFilter(series, position)
     # print 2,heights,position
-    diff = 100
+
+    diff = np.ptp(heights, axis=0)
     labels = None
 
     if heights.size > 5:
@@ -83,34 +101,34 @@ def outlierRemoval(series, position, clusterRange=5, interCluster=0.3):
 
             kmeans.fit(X)
             clusters = kmeans.cluster_centers_.squeeze()[:, 0]
-            diff = np.abs(clusters[0] - clusters[1])
 
             labels = kmeans.labels_
 
-            class1 = np.where(labels == 0)
-            class2 = np.where(labels == 1)
+            class1 = np.where(labels==0)
+            class2 = np.where(labels==1)
 
-            if height[class1] < height[class2]:
+            if len(class1[0]) > len(class2[0]):
                 idx = class1
             else:
                 idx = class2
 
             heights = heights[idx]
             position = position[idx]
+            diff = np.abs(clusters[0] - clusters[1])
 
 
         clusterMean = heights.mean()
 
-        stdDev = heights.std()
+        std = heights.std()
 
-        while stdDev > interCluster:
+        while std > interCluster:
             dist = np.abs(heights - clusterMean)
             furthestIdx = np.argmax(dist)
             keep = np.where(heights != heights[furthestIdx])
             heights = heights[keep]
             position = position[keep]
 
-            stdDev = heights.std()
+            std = heights.std()
 
         kmeans = None
         finalSeries, finalPosition = iqrFilter(heights, position)
@@ -120,6 +138,62 @@ def outlierRemoval(series, position, clusterRange=5, interCluster=0.3):
 
     return finalSeries, finalPosition
 
+def filter_outlier(results):
+    Range = len(results[1])
+
+    r = np.ptp(results[1], axis=0)
+    heights = results[1]
+    position = results[2]
+    diff = r
+    labels = None
+
+    if results[1].size > 5:
+
+        while diff > 5:
+            kmeans = KMeans(init='k-means++', n_clusters=2, n_init=10)
+
+            X = np.vstack([heights.ravel(), heights.ravel()]).T
+
+            kmeans.fit(X)
+            clusters = kmeans.cluster_centers_.squeeze()[:, 0]
+
+            labels = kmeans.labels_
+
+            class1 = np.where(labels == 0)
+            class2 = np.where(labels == 1)
+
+            if len(class1[0]) > len(class2[0]):
+                idx = class1
+            else:
+                idx = class2
+
+            heights = heights[idx]
+            position = position[idx]
+            diff = np.abs(clusters[0] - clusters[1])
+
+        clusterMean = heights.mean()
+
+        std = heights.std()
+
+        while std > 0.3:
+            dist = np.abs(heights - clusterMean)
+            furthestIdx = np.argmax(dist)
+            keep = np.where(heights != heights[furthestIdx])
+            heights = heights[keep]
+            position = position[keep]
+
+            std = heights.std()
+
+
+        heights,position = iqrFilter(heights, position)
+        kmeans = None
+
+
+        # groupObs(heights,position,)
+
+    l_item = [heights,position]
+
+    return heights,position
 def parse_netCDF(args):
    
     file, lat_range, counter = args['file'], args['lat_range'], args['counter']
@@ -205,7 +279,6 @@ def parse_netCDF(args):
             print 'j',j
             if ice_qual_flag_20hz_ku[idxcounter] != 0:
                 continue
-
             # if lon_20hz[i, j] == 'nan':
             #     continue
 
@@ -239,10 +312,12 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
     ts_plot = []
 
     height = []
+    testun = []
     dt = []
     counter = 0
     gHtArray = np.array([])
-    test = np.array([])
+    testHt = []
+    testT = []
     gTArray = np.array([])
     fList = []
     start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
@@ -278,73 +353,51 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
                 if track == pass_num:
                     if f_start_date <= pass_start_date <= pass_end_date <= f_end_date:
 
-                        try:
-                            args = {'file': os.path.join(working_dir,file), 'lat_range': [lat1,lat2], 'counter': counter}
-                            results = parse_netCDF(args)
-                            hgt,pos = outlierRemoval(results[1],results[2])
-                            dt.append(results[0])
-                            test = np.append(test,hgt.mean())
-                            gHtArray = np.append(gHtArray,results[1])
-                            gTArray = np.append(gTArray, results[2])
-                            fList.append([os.path.join(working_dir,file),[lat1,lat2],counter])
-                            counter += 1
-                        # break
-                        except Exception: # If it returns NULL, move on to the next file.
-                            continue
+                        # try:
+                        args = {'file': os.path.join(working_dir,file), 'lat_range': [lat1,lat2], 'counter': counter}
+                        results = parse_netCDF(args)
+                        # hgt,pos = outlierRemoval(results[1],results[2])
+                        testerOut = filter_outlier(results)
+                        testun.append(testerOut)
+
+
+                        dt.append(results[0])
+                        # test = np.append(test,hgt.mean())
+                        gHtArray = np.append(gHtArray,results[1])
+                        gTArray = np.append(gTArray, results[2])
+                        testHt.append(testerOut[0])
+                        testT.append(testerOut[1])
+                        fList.append([os.path.join(working_dir,file),[lat1,lat2],counter])
+                        counter += 1
+
+                        # except Exception: # If it returns NULL, move on to the next file.
+                        #     continue
 
 
                         # ts_plot.append([time_stamp,round(float(hgt),3)]) # Return this to the frontend
 
-    # ncores = mp.cpu_count()
-    # global THREAD_POOL
-    #
-    # if ncores < 4:
-    #     THREAD_POOL = ncores
-    #
-    # elif ncores < 8:
-    #     THREAD_POOL = 4
-    #
-    # elif ncores < 16:
-    #     THREAD_POOL = 12
-    #
-    # else:
-    #     THREAD_POOL = int(ncores / 0.7)
-    #
-    # pool = mp.Pool(THREAD_POOL)
-    # args = [{'file': i[0], 'lat_range': i[1], 'counter': i[2]} for i in fList]
-    # results = pool.map(parse_netCDF,args)
-    # # pool.close()
-    # # pool.join()
-    # dt,gHtArray,gTArray = [], np.array([]) ,np.array([])
-    #
-    # for i in results:
-    #     if i != None:
-    #         dt.append(i[0])
-    #         gHtArray = np.append(gHtArray,i[1])
-    #         gTArray = np.append(gTArray,i[2])
-    #     else:
-    #         dt.append(None)
 
-    # try:
-    gHtArray = gHtArray.astype(np.float)
-    gTArray = gTArray.astype(np.uint)
-    # except ValueError:
-    #     pass
-        # outH = []
-        # outT = []
-        # for i in range(gHtArray.size):
-        #     try:
-        #         outH.append(np.float(gHtArray[i]))
-        #         outT.append(np.uint(gTArray[i]))
-        #     except:
-        #         pass
-        # gHtArray = np.array(outH,dtype=np.float)
-        # gTArray = np.array(outT,dtype=np.uint)
+
+    try:
+        gHtArray = gHtArray.astype(np.float)
+        gTArray = gTArray.astype(np.uint)
+    except ValueError:
+        # pass
+        outH = []
+        outT = []
+        for i in range(gHtArray.size):
+            try:
+                outH.append(np.float(gHtArray[i]))
+                outT.append(np.uint(gTArray[i]))
+            except:
+                pass
+        gHtArray = np.array(outH,dtype=np.float)
+        gTArray = np.array(outT,dtype=np.uint)
 
     if len(dt) > 0:
         # print 'Original',gHtArray,gTArray
-        print 'Raw data',test,dt
-        print 'Len raw data',len(test),len(dt)
+        print 'Raw data',dt
+        print 'Len raw data',len(dt)
         series, position = outlierRemoval(gHtArray, gTArray)
         print 'After Outlier removal',series,position
         print 'Len after outlier removal',len(series),len(position)
@@ -352,14 +405,28 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
         print 'Difference of outlier removal:',len(gHtArray) - len(series),len(gTArray) - len(position)
         print 'Percentage of original:',float(float(len(series))/float(len(gHtArray)))
         print 'Final processed',ts_plot
-        print 'Final len:',len(ts_plot)
+        htFlat = [val for sublist in testHt for val in sublist]
+        tFlat = [val for sublist in testT for val in sublist]
+        htFlat,tFlat = iqrFilter(np.array(htFlat), np.array(tFlat))
+        ts_plot2 = groupObs(np.array(htFlat), np.array(tFlat), dt, start_date, end_date)
+        print 'After new removal process',ts_plot2
+        print 'Final len:',len(ts_plot),len(ts_plot2)
+
         print 'Len of files processed:',len(fList)
-        print "Min:{0}\tMax:{1}\tMean:{2}\tStd:{3}".format(np.nanmin(test),np.nanmax(test),np.nanmean(test),np.nanstd(test))
+        with open("plot.csv", 'wb') as resultFile:
+            wr = csv.writer(resultFile, dialect='excel')
+            wr.writerows(ts_plot)
+            # wr.writerows(ts_plot2)
+            with open("plot2.csv", 'wb') as resultFile:
+                wr = csv.writer(resultFile, dialect='excel')
+                # wr.writerows(ts_plot)
+                wr.writerows(ts_plot2)
+        # print "Min:{0}\tMax:{1}\tMean:{2}\tStd:{3}".format(np.nanmin(test),np.nanmax(test),np.nanmean(test),np.nanstd(test))
         # with open('/home/dev/altex.csv', 'a') as f:
         #     writer = csv.writer(f)
         #     writer.writerow([track,start_date,end_date,len(gHtArray),len(series),len(gHtArray) - len(series),float(float(len(series))/float(len(gHtArray))),len(ts_plot),len(fList)])
     return ts_plot
 
-calc_jason_ts('10.421329344937973','10.580663601863193','2008-01-01','2017-12-01','135','jason2')
+# calc_jason_ts('10.421329344937973','10.580663601863193','2009-09-24','2017-12-01','135','jason2')
 # calc_jason_ts('12.002012','105.481','12.019098','105.481','2008-01-01','2008-12-01','140')
 #calc_jason_ts('12.515050883512345','12.52665571422412','2012-01-01','2013-12-01','001','jason2')
