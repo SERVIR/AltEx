@@ -26,7 +26,9 @@ var LIBRARY_OBJECT = (function() {
         $loading,
         map,
         public_interface,				// Object returned by the module
-        variable_data;
+        variable_data,
+        water_mapid,
+        water_token;
     /************************************************************************
      *                    PRIVATE FUNCTION DECLARATIONS
      *************************************************************************/
@@ -41,6 +43,8 @@ var LIBRARY_OBJECT = (function() {
      *************************************************************************/
 
     init_vars = function(){
+        water_mapid = $('#layers').attr('data-water-mapid');
+        water_token = $('#layers').attr('data-water-token');
         var $layers_element = $('#layers');
         $loading = $('#view-file-loading');
         var $var_element = $("#variable");
@@ -65,6 +69,12 @@ var LIBRARY_OBJECT = (function() {
                 attributions: [attribution],
                 url: 'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/' +
                 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+            })
+        });
+
+        var water_layer = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: "https://earthengine.googleapis.com/map/"+water_mapid+"/{z}/{x}/{y}?token="+water_token
             })
         });
 
@@ -156,7 +166,7 @@ var LIBRARY_OBJECT = (function() {
 
         //Note: The Satellite Tracks layers need to be in the same order as the dropdown as generated in the controllers.py
 
-        layers = [base_map,jason2_layer,saral_layer,pt1_vector,pt2_vector];
+        layers = [base_map,water_layer,jason2_layer,saral_layer,pt1_vector,pt2_vector];
 
         map = new ol.Map({
             target: 'map',
@@ -287,7 +297,7 @@ var LIBRARY_OBJECT = (function() {
 
             var sensor = $("#select-sat").val();
 
-            var index = sensor.split('|')[0];
+            var index = sensor.split('|')[0] + 1;
 
             current_layer = layers[index];
 

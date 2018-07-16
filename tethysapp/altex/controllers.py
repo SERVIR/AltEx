@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from tethys_sdk.gizmos import *
 import config as cfg
 
+import geeutils
+
 def home(request):
     """
     Controller for the app home page.
@@ -41,6 +43,8 @@ def home(request):
     jason2_store = cfg.geoserver['jason2_store']
     saral_store = cfg.geoserver['saral_store']
 
+    water_layer = geeutils.historicalMap(algorithm='JRC')
+
     context = {
         'start_date':start_date,
         'end_date':end_date,
@@ -48,7 +52,9 @@ def home(request):
         'geoserver_wms_url': geoserver_wms_url,
         'geoserver_workspace': geoserver_workspace,
         'jason2_store':jason2_store,
-        'saral_store':saral_store
+        'saral_store':saral_store,
+        'water_mapid':water_layer['mapid'],
+        'water_token':water_layer['token']
 
 
     }
