@@ -24,7 +24,7 @@ def extractS3Water(img):
 
 def historicalMap(algorithm='JRC',aoi=geom):
 
-    ic = ee.ImageCollection('COPERNICUS/S3/OLCI').filterDate('2017-01-01','2017-01-31')
+    ic = ee.ImageCollection('COPERNICUS/S3/OLCI').filterDate('2017-03-01','2017-03-31')
 
     icWater = ic.map(extractS3Water)
 
@@ -32,7 +32,7 @@ def historicalMap(algorithm='JRC',aoi=geom):
     allObs = icWater.count()
 
     ocean = oceanObs.divide(allObs).multiply(100)
-    
+
     if algorithm in ['JRC']:
         jrc = ee.Image('JRC/GSW1_0/GlobalSurfaceWater')
         occurrence = jrc.select('occurrence').unmask().rename('water')
