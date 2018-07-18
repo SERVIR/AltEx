@@ -31,7 +31,7 @@ def historicalMap(algorithm='JRC',aoi=geom):
     oceanObs = icWater.sum()
     allObs = icWater.count()
 
-    ocean = oceanObs.divide(allObs).multiply(100)
+    ocean = oceanObs.divide(allObs).gt(0.9).multiply(100)
 
     if algorithm in ['JRC']:
         jrc = ee.Image('JRC/GSW1_0/GlobalSurfaceWater')

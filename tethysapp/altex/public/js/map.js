@@ -297,9 +297,10 @@ var LIBRARY_OBJECT = (function() {
 
             var sensor = $("#select-sat").val();
 
-            var index = sensor.split('|')[0] + 1;
+            var index = parseInt(sensor.split('|')[0]) + 1;
 
             current_layer = layers[index];
+            console.log(index)
 
             var wms_url = current_layer.getSource().getGetFeatureInfoUrl(coords, viewResolution, view.getProjection(), {'INFO_FORMAT': 'application/json'});
 
