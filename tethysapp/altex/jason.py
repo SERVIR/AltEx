@@ -52,12 +52,12 @@ def groupObsNew(series,position,times,start_date,end_date):
     end_date = calendar.timegm(end_date.utctimetuple()) * 1000
     series = np.array(series)
     position = np.array(position)
-    for i in range(uniqVals.size):
+    for i in range(series.size):
         key = int(uniqVals[i])
-        if times[key] != None:
-            if start_date <= times[key] <= end_date:
-                dates.append(times[key])
-        obs.append(np.mean(series[np.where(position==key)]))
+        if times[i] != None:
+            if start_date <= times[i] <= end_date:
+                dates.append(times[i])
+        obs.append(np.mean(series[i]))
 
     return zip(*[dates,obs])
 
@@ -107,7 +107,7 @@ def outlierRemoval(series, position, clusterRange=5, interCluster=0.3):
             class1 = np.where(labels==0)
             class2 = np.where(labels==1)
 
-            if len(class1[0]) > len(class2[0]):
+            if len(class1[0]) < len(class2[0]):
                 idx = class1
             else:
                 idx = class2
@@ -147,9 +147,9 @@ def filter_outlier(results):
     diff = r
     labels = None
 
-    if results[1].size > 5:
+    if heights.size > 4:
 
-        while diff > 5:
+        while (diff > 5) & (len(heights)>=2):
             kmeans = KMeans(init='k-means++', n_clusters=2, n_init=10)
 
             X = np.vstack([heights.ravel(), heights.ravel()]).T
@@ -162,6 +162,7 @@ def filter_outlier(results):
             class1 = np.where(labels == 0)
             class2 = np.where(labels == 1)
 
+            # if clusters[0] <= clusters[1]:
             if len(class1[0]) > len(class2[0]):
                 idx = class1
             else:
@@ -170,6 +171,8 @@ def filter_outlier(results):
             heights = heights[idx]
             position = position[idx]
             diff = np.abs(clusters[0] - clusters[1])
+
+            print len(heights)
 
         clusterMean = heights.mean()
 
@@ -188,14 +191,18 @@ def filter_outlier(results):
         heights,position = iqrFilter(heights, position)
         kmeans = None
 
-
-        # groupObs(heights,position,)
-
-    l_item = [heights,position]
-
     return heights,position
+
+
+def stretchDim(oldArr,newDim,type='nearest'):
+    oldx = np.arange(oldArr.size)
+    newx = np.linspace(0,oldx.max(),newDim)
+    fInterp = interpolate.interp1d(oldx,oldArr,kind=type,fill_value='extrapolate')
+    return fInterp(newx)
+
+
 def parse_netCDF(args):
-   
+
     file, lat_range, counter = args['file'], args['lat_range'], args['counter']
     print '------------------------Start of file:'+str(file)+'------------------------------'
     data = Dataset(file)
@@ -205,107 +212,106 @@ def parse_netCDF(args):
     time_20hz = data.variables['time_20hz'][:].ravel()
     lon_20hz = data.variables['lon_20hz'][:].ravel()
     lat_20hz = data.variables['lat_20hz'][:].ravel()
-    # lon = data.variables['lon'][:].ravel()
+    lon = data.variables['lon'][:].ravel()
     lat = data.variables['lat'][:].ravel()
+
+    dim20Hz = lat_20hz.size
+
+    newLat = stretchDim(lat,dim20Hz,'linear')
+
+    print 'LatDiff: {0}'.format(np.mean(lat_20hz-newLat))
 
     if float(lat_range[0]) > float(lat_range[1]):
         tmp = lat_range[0]
         lat_range[0] = lat_range[1]
         lat_range[1] = tmp
 
-    latidx = np.where((lat >= float(lat_range[0])) & (lat <= float(lat_range[1])))
+    latidx = np.where((newLat >= float(lat_range[0])) & (newLat <= float(lat_range[1])))
     latidx_2d = np.where((lat_20hz >= float(lat_range[0])) & (lat_20hz <= float(lat_range[1])))
     print 'Latidx before processing',latidx
     print 'Latidx 2d',latidx_2d[0]
-    if len(latidx[0]) == 0:
-        offset = latidx_2d[0]%20
-        # print 'Offset',offset
-        # print 'Latidx 2d',latidx_2d[0]
+    # if len(latidx[0]) == 0:
+    #     offset = latidx_2d[0]%20
+    #     # print 'Offset',offset
+    #     # print 'Latidx 2d',latidx_2d[0]
+    #
+    #     if 0 in offset:
+    #         latidx = np.array([latidx_2d[0][offset.tolist().index(0)] / 20])
+    #     else:
+    #         latidx = np.array([(latidx_2d[0][0] - offset[0]) / 20])
 
-        if 0 in offset:
-            latidx = np.array([latidx_2d[0][offset.tolist().index(0)] / 20])
-        else:
-            latidx = np.array([(latidx_2d[0][0] - offset[0]) / 20])
 
-    print latidx
-    alt_state_flag_ku_band_status = data.variables['alt_state_flag_ku_band_status'][latidx]
-    alt_20hz = data.variables['alt_20hz'][:].ravel()[latidx_2d]
-    model_dry_tropo_corr = data.variables['model_dry_tropo_corr'][latidx]
-    model_wet_tropo_corr = data.variables['model_wet_tropo_corr'][latidx]
-    iono_corr_gim_ku = data.variables['iono_corr_gim_ku'][latidx]
-    solid_earth_tide = data.variables['solid_earth_tide'][latidx]
-    pole_tide = data.variables['pole_tide'][latidx]
-    ice_range_20hz_ku = data.variables['ice_range_20hz_ku'][:].ravel()[latidx_2d]
-    ice_sig0_20hz_ku = data.variables['ice_sig0_20hz_ku'][:].ravel()[latidx_2d]
-    ice_qual_flag_20hz_ku = data.variables['ice_qual_flag_20hz_ku'][:].ravel()[latidx_2d]
+    if len(latidx_2d) > 0:
+        # latidx_2d = latidx_2d[0]
 
-    lons = lon_20hz[latidx_2d]
-    lats = lat_20hz[latidx_2d]
+        # 1Hz VARIABLES
+        alt_state_flag_ku_band_status = stretchDim(data.variables['alt_state_flag_ku_band_status'],dim20Hz,'nearest')[latidx_2d]
+        model_dry_tropo_corr = stretchDim(data.variables['model_dry_tropo_corr'],dim20Hz,'nearest')[latidx_2d]
+        model_wet_tropo_corr = stretchDim(data.variables['model_wet_tropo_corr'],dim20Hz,'nearest')[latidx_2d]
+        iono_corr_gim_ku = stretchDim(data.variables['iono_corr_gim_ku'],dim20Hz,'nearest')[latidx_2d]
+        solid_earth_tide = stretchDim(data.variables['solid_earth_tide'],dim20Hz,'nearest')[latidx_2d]
+        pole_tide = stretchDim(data.variables['pole_tide'],dim20Hz,'nearest')[latidx_2d]
 
-    time_20hz_units = data.variables['time_20hz'].units
+        # 20Hz VARIABLES
+        alt_20hz = data.variables['alt_20hz'][:].ravel()[latidx_2d]
+        ice_range_20hz_ku = data.variables['ice_range_20hz_ku'][:].ravel()[latidx_2d]
+        ice_sig0_20hz_ku = data.variables['ice_sig0_20hz_ku'][:].ravel()[latidx_2d]
+        ice_qual_flag_20hz_ku = data.variables['ice_qual_flag_20hz_ku'][:].ravel()[latidx_2d]
 
-    dim_size = alt_state_flag_ku_band_status.size
+        lons = lon_20hz[latidx_2d]
+        lats = lat_20hz[latidx_2d]
 
-    mjd_20hz = []
-    hght = []
-    longt = []
-    latd = []
-    bs = []
-    cnt = 0
-    idxcounter = 0
+        time_20hz_units = data.variables['time_20hz'].units
 
-    leftover = (lats.size - cnt)%20
+        dim_size = alt_state_flag_ku_band_status.size
 
-    print 'Len of alt 20hz',len(alt_20hz)
-    if len(alt_state_flag_ku_band_status) > 0:
-        if len(alt_20hz) > len(alt_state_flag_ku_band_status)*20:
-            leftover = leftover + 20
+        mjd_20hz = []
+        hght = []
+        longt = []
+        latd = []
+        bs = []
 
-    for i in range(0, dim_size):
+        print 'Len of alt 20hz',len(alt_20hz)
+        if len(alt_state_flag_ku_band_status) > 0:
+            if len(alt_20hz) > len(alt_state_flag_ku_band_status)*20:
+                leftover = leftover + 20
 
-        # A check to see if the alt state flag ku band status is good
-        if alt_state_flag_ku_band_status[i] != 0:
-            continue
+        for i in range(0, dim_size):
 
-        media_corr = model_dry_tropo_corr[i] + model_wet_tropo_corr[i] + iono_corr_gim_ku[i] + solid_earth_tide[i] + \
-                     pole_tide[i]
-
-        if i == dim_size-1:
-            hz = leftover
-        else:
-            hz = 20
-
-        for j in range(0, hz):
-            print 'j',j
-            if ice_qual_flag_20hz_ku[idxcounter] != 0:
+            # A check to see if the alt state flag ku band status is good
+            if alt_state_flag_ku_band_status[i] != 0:
                 continue
-            # if lon_20hz[i, j] == 'nan':
-            #     continue
 
-            if np.ma.is_masked(time_20hz[idxcounter]) == False:
-                # print 'd2d23d;',time_20hz[idxcounter]
-                mjd_20hz.append(time_20hz[idxcounter])
+            media_corr = model_dry_tropo_corr[i] + model_wet_tropo_corr[i] + iono_corr_gim_ku[i] + solid_earth_tide[i] + \
+                         pole_tide[i]
 
-            gc = geoidalCorrection(lons[idxcounter], lats[idxcounter])
-            print 'index counter',idxcounter
-            hght.append(alt_20hz[idxcounter] - (media_corr + ice_range_20hz_ku[idxcounter]) - gc - 0.7)
-            bs.append(ice_sig0_20hz_ku[idxcounter])
-            cnt+=1
-            idxcounter+=1
-    print 'Length of height',len(hght)
-    print 'Corrected height list:',hght
-    # Check to make sure that the distance between is the points is sufficient
-    # if len(latd) > 0:
-    if len(mjd_20hz) > 0:
-        mjd_20hz = np.mean(np.array(mjd_20hz))
-        mjd = netCDF4.num2date(mjd_20hz, time_20hz_units, calendar='gregorian')
-        time_stamp = calendar.timegm(mjd.utctimetuple()) * 1000  # Converting date to utc timestamp for Highcharts
-        ht = np.array(hght)
-        tIndex = np.full(ht.shape, int(counter))
-        print '-------------------------------End of file---------------------------------'
-        return int(time_stamp), ht.astype(np.float), tIndex.astype(np.uint)  # Timestamp and height for Highcharts
-    else:
-        return None
+            if ice_qual_flag_20hz_ku[i] != 0:
+                continue
+
+            gc = geoidalCorrection(lons[i], lats[i])
+            hght.append(alt_20hz[i] - (media_corr + ice_range_20hz_ku[i]) - gc - 0.7)
+            bs.append(ice_sig0_20hz_ku[i])
+
+        print 'Length of height',len(hght)
+        print 'Corrected height list:',hght
+        # Check to make sure that the distance between is the points is sufficient
+        # if len(latd) > 0:
+        if len(hght) > 0:
+            epoch = datetime.datetime(1970,1,1,0,0,0,0)
+            ref = datetime.datetime(2000,1,1,0,0,0,0)
+            trackTime = time_20hz[latidx_2d].mean()
+
+            time = ref + datetime.timedelta(seconds=trackTime)
+
+            print(time)
+            time_stamp = (time-epoch).total_seconds() * 1000
+
+            ht = np.array(hght)
+            tIndex = np.full(ht.shape, int(counter))
+            print '-------------------------------End of file---------------------------------'
+            return int(time_stamp), ht.astype(np.float), tIndex.astype(np.uint)  # Timestamp and height for Highcharts
+        else:
+            return None
 
 def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
     # Extract the height and timestep from a filtered netCDF file
@@ -356,43 +362,48 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
                         # try:
                         args = {'file': os.path.join(working_dir,file), 'lat_range': [lat1,lat2], 'counter': counter}
                         results = parse_netCDF(args)
-                        # hgt,pos = outlierRemoval(results[1],results[2])
-                        testerOut = filter_outlier(results)
-                        testun.append(testerOut)
+                        if results:
+                            # hgt,pos = outlierRemoval(results[1],results[2])
+                            testerOut = filter_outlier(results)
+                            hout = np.mean(testerOut[0])
+                            if np.isnan(hout) == False:
+                                testun.append(testerOut)
 
 
-                        dt.append(results[0])
-                        # test = np.append(test,hgt.mean())
-                        gHtArray = np.append(gHtArray,results[1])
-                        gTArray = np.append(gTArray, results[2])
-                        testHt.append(testerOut[0])
-                        testT.append(testerOut[1])
-                        fList.append([os.path.join(working_dir,file),[lat1,lat2],counter])
-                        counter += 1
+                                dt.append(results[0])
+                                # test = np.append(test,hgt.mean())
+                                gHtArray = np.append(gHtArray,results[1])
+                                gTArray = np.append(gTArray, results[2])
 
-                        # except Exception: # If it returns NULL, move on to the next file.
-                        #     continue
+                                testHt.append(np.mean(testerOut[0]))
+                                testT.append(testerOut[1])
+                                fList.append([os.path.join(working_dir,file),[lat1,lat2],counter])
+                                counter += 1
+
+                            # except Exception: # If it returns NULL, move on to the next file.
+                            #     continue
 
 
                         # ts_plot.append([time_stamp,round(float(hgt),3)]) # Return this to the frontend
 
 
 
-    try:
-        gHtArray = gHtArray.astype(np.float)
-        gTArray = gTArray.astype(np.uint)
-    except ValueError:
-        # pass
-        outH = []
-        outT = []
-        for i in range(gHtArray.size):
-            try:
-                outH.append(np.float(gHtArray[i]))
-                outT.append(np.uint(gTArray[i]))
-            except:
-                pass
-        gHtArray = np.array(outH,dtype=np.float)
-        gTArray = np.array(outT,dtype=np.uint)
+    # try:
+    gHtArray = gHtArray.astype(np.float)
+    gTArray = gTArray.astype(np.uint)
+    testHt = np.array(testHt,dtype=np.float)
+    # except ValueError:
+    #     # pass
+    #     outH = []
+    #     outT = []
+    #     for i in range(gHtArray.size):
+    #         try:
+    #             outH.append(np.float(gHtArray[i]))
+    #             outT.append(np.uint(gTArray[i]))
+    #         except:
+    #             pass
+    #     gHtArray = np.array(outH,dtype=np.float)
+    #     gTArray = np.array(outT,dtype=np.uint)
 
     if len(dt) > 0:
         # print 'Original',gHtArray,gTArray
@@ -405,10 +416,11 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
         print 'Difference of outlier removal:',len(gHtArray) - len(series),len(gTArray) - len(position)
         print 'Percentage of original:',float(float(len(series))/float(len(gHtArray)))
         print 'Final processed',ts_plot
-        htFlat = [val for sublist in testHt for val in sublist]
-        tFlat = [val for sublist in testT for val in sublist]
-        htFlat,tFlat = iqrFilter(np.array(htFlat), np.array(tFlat))
-        ts_plot2 = groupObs(np.array(htFlat), np.array(tFlat), dt, start_date, end_date)
+        # htFlat = [val for sublist in testHt for val in sublist]
+        # tFlat = [val for sublist in testT for val in sublist]
+        # htFlat,tFlat = iqrFilter(np.array(htFlat), np.array(tFlat))
+        finalH, finalT = iqrFilter(np.array(testHt),np.array(dt))
+        ts_plot2 = zip(*[finalT,finalH])#groupObs(np.array(htFlat), np.array(tFlat), dt, start_date, end_date)
         print 'After new removal process',ts_plot2
         print 'Final len:',len(ts_plot),len(ts_plot2)
 
@@ -417,16 +429,20 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
             wr = csv.writer(resultFile, dialect='excel')
             wr.writerows(ts_plot)
             # wr.writerows(ts_plot2)
-            with open("plot2.csv", 'wb') as resultFile:
-                wr = csv.writer(resultFile, dialect='excel')
-                # wr.writerows(ts_plot)
-                wr.writerows(ts_plot2)
+        with open("plot2.csv", 'wb') as resultFile:
+            wr = csv.writer(resultFile, dialect='excel')
+            # wr.writerows(ts_plot)
+            wr.writerows(ts_plot2)
         # print "Min:{0}\tMax:{1}\tMean:{2}\tStd:{3}".format(np.nanmin(test),np.nanmax(test),np.nanmean(test),np.nanstd(test))
         # with open('/home/dev/altex.csv', 'a') as f:
         #     writer = csv.writer(f)
         #     writer.writerow([track,start_date,end_date,len(gHtArray),len(series),len(gHtArray) - len(series),float(float(len(series))/float(len(gHtArray))),len(ts_plot),len(fList)])
     return ts_plot
 
-# calc_jason_ts('10.421329344937973','10.580663601863193','2009-09-24','2017-12-01','135','jason2')
-# calc_jason_ts('12.002012','105.481','12.019098','105.481','2008-01-01','2008-12-01','140')
-#calc_jason_ts('12.515050883512345','12.52665571422412','2012-01-01','2013-12-01','001','jason2')
+t1 = datetime.datetime.now()
+
+# calc_jason_ts('10.421329344937973','10.580663601863193','2008-01-01','2016-09-15','135','jason2')
+# calc_jason_ts('12.002012','12.019098','2008-01-01','2017-12-01','140','jason2')
+calc_jason_ts('12.515050883512345','12.52665571422412','2008-01-01','2017-12-01','001','jason2')
+
+print "Processing time: {}".format(datetime.datetime.now()-t1)
