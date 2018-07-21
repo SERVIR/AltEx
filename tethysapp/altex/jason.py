@@ -28,22 +28,6 @@ def geoidalCorrection(lon_,lat_):
     corr = iy(lon_, lat_)[0]
     return corr
 
-def groupObs(series,position,times,start_date,end_date):
-    uniqVals = np.unique(position)
-    obs = []
-    dates = []
-    start_date = calendar.timegm(start_date.utctimetuple()) * 1000
-    end_date = calendar.timegm(end_date.utctimetuple()) * 1000
-    for i in range(uniqVals.size):
-        key = int(uniqVals[i])
-        if times[key] != None:
-            if start_date <= times[key] <= end_date:
-                dates.append(times[key])
-        obs.append(np.mean(series[np.where(position==key)]))
-
-
-    return zip(*[dates,obs])
-
 def groupObsNew(series,position,times,start_date,end_date):
     uniqVals = np.unique(position)
     obs = []
@@ -280,6 +264,7 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
 
                         args = {'file': os.path.join(working_dir,file), 'lat_range': [lat1,lat2], 'counter': counter}
                         results = parse_netCDF(args)
+                        testerOut = filter_outlier(results)
                         if results:
                             hout = np.mean(testerOut[0])
                             if np.isnan(hout) == False:
