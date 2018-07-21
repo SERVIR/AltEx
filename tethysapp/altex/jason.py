@@ -246,11 +246,11 @@ def parse_netCDF(args):
 
         # 1Hz VARIABLES
         alt_state_flag_ku_band_status = stretchDim(data.variables['alt_state_flag_ku_band_status'],dim20Hz,'nearest')[latidx_2d]
-        model_dry_tropo_corr = stretchDim(data.variables['model_dry_tropo_corr'],dim20Hz,'nearest')[latidx_2d]
-        model_wet_tropo_corr = stretchDim(data.variables['model_wet_tropo_corr'],dim20Hz,'nearest')[latidx_2d]
-        iono_corr_gim_ku = stretchDim(data.variables['iono_corr_gim_ku'],dim20Hz,'nearest')[latidx_2d]
-        solid_earth_tide = stretchDim(data.variables['solid_earth_tide'],dim20Hz,'nearest')[latidx_2d]
-        pole_tide = stretchDim(data.variables['pole_tide'],dim20Hz,'nearest')[latidx_2d]
+        model_dry_tropo_corr = stretchDim(data.variables['model_dry_tropo_corr'],dim20Hz,'linear')[latidx_2d]
+        model_wet_tropo_corr = stretchDim(data.variables['model_wet_tropo_corr'],dim20Hz,'linear')[latidx_2d]
+        iono_corr_gim_ku = stretchDim(data.variables['iono_corr_gim_ku'],dim20Hz,'linear')[latidx_2d]
+        solid_earth_tide = stretchDim(data.variables['solid_earth_tide'],dim20Hz,'linear')[latidx_2d]
+        pole_tide = stretchDim(data.variables['pole_tide'],dim20Hz,'linear')[latidx_2d]
 
         # 20Hz VARIABLES
         alt_20hz = data.variables['alt_20hz'][:].ravel()[latidx_2d]
@@ -326,8 +326,13 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
     testT = []
     gTArray = np.array([])
     fList = []
-    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+
+    try:
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+    except:
+        pass
+
     f_start_date = None
     f_end_date = None
     JASON_DIR = None
@@ -437,12 +442,12 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
         # with open('/home/dev/altex.csv', 'a') as f:
         #     writer = csv.writer(f)
         #     writer.writerow([track,start_date,end_date,len(gHtArray),len(series),len(gHtArray) - len(series),float(float(len(series))/float(len(gHtArray))),len(ts_plot),len(fList)])
-    return ts_plot
+    return ts_plot2
 
-t1 = datetime.datetime.now()
+# t1 = datetime.datetime.now()
 
 # calc_jason_ts('10.421329344937973','10.580663601863193','2008-01-01','2016-09-15','135','jason2')
-# calc_jason_ts('12.002012','12.019098','2008-01-01','2017-12-01','140','jason2')
-calc_jason_ts('12.515050883512345','12.52665571422412','2008-01-01','2017-12-01','001','jason2')
+# calc_jason_ts('16.147471112269287','16.22330557626728','2008-01-01','2017-12-01','205','jason2')
+# calc_jason_ts('12.515050883512345','12.52665571422412','2008-01-01','2016-09-15','001','jason2')
 
-print "Processing time: {}".format(datetime.datetime.now()-t1)
+# print "Processing time: {}".format(datetime.datetime.now()-t1)
