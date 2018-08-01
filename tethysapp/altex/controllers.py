@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from tethys_sdk.gizmos import *
 import config as cfg
+import datetime
 
 import geeutils
 
@@ -20,13 +21,15 @@ def home(request):
                             today_button=False,
                             initial='January 1, 2008')
 
+    endDate = datetime.datetime.now().strftime('%-m/%-d/%Y')
+
     end_date = DatePicker(name='end-date',
                           attributes={'id': 'end-date'},
                           display_text='End Date',
                           autoclose=True,
                           format='MM d, yyyy',
                           start_date='1/1/2008',
-                          end_date='3/15/2018',
+                          end_date=endDate,
                           start_view='decade',
                           today_button=False,
                           initial='December 1, 2017')
@@ -35,7 +38,7 @@ def home(request):
                              name='select-sat',
                              attributes={'id':'select-sat'},
                              multiple=False,
-                             options=[('JASON 2', '1|jason2'),('JASON 3', '2|jason3')])
+                             options=[('JASON 2', '1|jason2'),('JASON 3', '1|jason3')])
     # , ('SARAL', '2|saral')
 
     geoserver_wms_url = cfg.geoserver['wms_url']
