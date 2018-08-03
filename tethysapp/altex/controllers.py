@@ -10,18 +10,18 @@ def home(request):
     """
     Controller for the app home page.
     """
+    endDate = datetime.datetime.now().strftime('%-m/%-d/%Y')
+    
     start_date = DatePicker(name='start-date',
                             attributes={'id': 'start-date'},
                             display_text='Start Date',
                             autoclose=True,
                             format='MM d, yyyy',
                             start_date='1/1/2008',
-                            end_date='3/15/2018',
+                            end_date=endDate,
                             start_view='decade',
                             today_button=False,
                             initial='January 1, 2008')
-
-    endDate = datetime.datetime.now().strftime('%-m/%-d/%Y')
 
     end_date = DatePicker(name='end-date',
                           attributes={'id': 'end-date'},
