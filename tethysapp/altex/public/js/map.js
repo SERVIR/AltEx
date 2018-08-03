@@ -28,7 +28,8 @@ var LIBRARY_OBJECT = (function() {
         public_interface,				// Object returned by the module
         variable_data,
         water_mapid,
-        water_token;
+        water_token,
+        $chartModal;
     /************************************************************************
      *                    PRIVATE FUNCTION DECLARATIONS
      *************************************************************************/
@@ -55,6 +56,8 @@ var LIBRARY_OBJECT = (function() {
         gs_wms_workspace = $var_element.attr('data-geoserver-workspace');
         jason2_store = $var_element.attr('data-jason2-store');
         saral_store = $var_element.attr('data-saral-store');
+
+        $chartModal = $("#chart-modal");
 
     };
 
@@ -439,9 +442,11 @@ var LIBRARY_OBJECT = (function() {
                 if("success" in data) {
                     // var json_response = JSON.parse(data);
                     $loading.addClass('hidden');
+                    $chartModal.modal('show');
+                    console.log(data.values)
 
                     if(data.values.length > 0){
-                        $("#plotter").removeClass('hidden');
+                        // $("#plotter").removeClass('hidden');
                         Highcharts.stockChart('plotter',{
                             chart: {
                                 type:'spline',
@@ -494,6 +499,7 @@ var LIBRARY_OBJECT = (function() {
                                 name: "Altimetry"
                             }]
                         });
+                        $("#plotter").removeClass('hidden');
                     }else{
                         $('.warning').html('<b>Sorry! There are no data values for the selected points. Please try another site.</b>');
                         $loading.addClass('hidden');
