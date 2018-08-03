@@ -29,7 +29,8 @@ var LIBRARY_OBJECT = (function() {
         variable_data,
         water_mapid,
         water_token,
-        $chartModal;
+        $chartModal,
+        chart;
     /************************************************************************
      *                    PRIVATE FUNCTION DECLARATIONS
      *************************************************************************/
@@ -47,7 +48,7 @@ var LIBRARY_OBJECT = (function() {
         water_mapid = $('#layers').attr('data-water-mapid');
         water_token = $('#layers').attr('data-water-token');
         var $layers_element = $('#layers');
-        $loading = $('#view-file-loading');
+        $loading = $('#spinner');
         var $var_element = $("#variable");
         // variable_data = $var_element.attr('data-variable-info');
         // variable_data = JSON.parse(variable_data);
@@ -390,7 +391,8 @@ var LIBRARY_OBJECT = (function() {
 
         $("#btn-submit").on('click',function(){
             $('.warning').html('');
-            $loading.removeClass('hidden');
+            // $loading.removeClass('hidden');
+            $loading.css('display','block');
             $("#plotter").addClass('hidden');
             var point1 = $("#point1").val();
             var point2 = $("#point2").val();
@@ -401,26 +403,30 @@ var LIBRARY_OBJECT = (function() {
             var track2 = $("#track2").val();
             if (point1 == ""){
                 $('.warning').html('<b>Please select a lower bound.</b>');
-                $loading.addClass('hidden');
+                // $loading.addClass('hidden');
+                $loading.css('display','none');
                 $("#plotter").addClass('hidden');
                 return false;
             }
             if (point2 == ""){
                 $('.warning').html('<b>Please select an upper bound.</b>');
-                $loading.addClass('hidden');
+                // $loading.addClass('hidden');
+                $loading.css('display','none');
                 $("#plotter").addClass('hidden');
                 return false;
             }
 
             if (track1 != track2){
                 $('.warning').html('<b>The points have to be on the same track. Please make the necessary changes and try again.</b>');
-                $loading.addClass('hidden');
+                // $loading.addClass('hidden');
+                $loading.css('display','none');
                 $("#plotter").addClass('hidden');
                 return false;
             }
             if((start_date == "") || (end_date == "")){
                 $('.warning').html('<b>Please select a start/end date before submitting.</b>');
-                $loading.addClass('hidden');
+                // $loading.addClass('hidden');
+                $loading.css('display','none');
                 $("#plotter").addClass('hidden');
                 return false;
             }
@@ -431,7 +437,8 @@ var LIBRARY_OBJECT = (function() {
             var distance = wgs84_sphere.haversineDistance([parseFloat(lwr_pt[0]),parseFloat(lwr_pt[1])],[parseFloat(upr_pt[0]),parseFloat(upr_pt[1])]);
             if(distance < 350){
                 $('.warning').html('<b>The distance between the points has to be greater than 350 m. Please make the necessary changes and try again.</b>');
-                $loading.addClass('hidden');
+                // $loading.addClass('hidden');
+                $loading.css('display','none');
                 $("#plotter").addClass('hidden');
                 return false;
             }
@@ -441,17 +448,16 @@ var LIBRARY_OBJECT = (function() {
             xhr.done(function(data) {
                 if("success" in data) {
                     // var json_response = JSON.parse(data);
-                    $loading.addClass('hidden');
+                    // $loading.addClass('hidden');
+                    $loading.css('display','none');
                     $chartModal.modal('show');
-                    console.log(data.values)
 
                     if(data.values.length > 0){
-                        // $("#plotter").removeClass('hidden');
-                        Highcharts.stockChart('plotter',{
+                        chart = Highcharts.stockChart('plotter',{
                             chart: {
                                 type:'spline',
                                 zoomType: 'x',
-                                height: 350
+                                height: 350,
                             },
                             title: {
                                 text:"Values at between Lat 1: " +data.lat1+' and Lat 2: '+data.lat2,
@@ -502,17 +508,23 @@ var LIBRARY_OBJECT = (function() {
                         $("#plotter").removeClass('hidden');
                     }else{
                         $('.warning').html('<b>Sorry! There are no data values for the selected points. Please try another site.</b>');
-                        $loading.addClass('hidden');
+                        // $loading.addClass('hidden');
+                        $loading.css('display','none');
                         $("#plotter").addClass('hidden');
                     }
 
                 }else{
                     $('.warning').html('<b>'+data.error+'</b>');
-                    $loading.addClass('hidden');
+                    // $loading.addClass('hidden');
+                    $loading.css('display','none');
                     $("#plotter").addClass('hidden');
                 }
             });
         });
+
+        $(window).on('resize', function(){
+          chart.redraw()
+        })
 
         $('#select-sat').change(function(){
             map.getLayers().item(1).setVisible(false);
