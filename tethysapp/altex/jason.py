@@ -264,7 +264,11 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
 
                         args = {'file': os.path.join(working_dir,file), 'lat_range': [lat1,lat2], 'counter': counter}
                         results = parse_netCDF(args)
-                        testerOut = filter_outlier(results)
+                        print results
+                        try:
+                            testerOut = filter_outlier(results)
+                        except:
+                            pass
                         if results:
                             hout = np.mean(testerOut[0])
                             if np.isnan(hout) == False:
@@ -280,16 +284,19 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
         finalH, finalT = iqrFilter(np.array(testHt),np.array(dt))
         ts_plot = zip(*[finalT,finalH])
 
-        # with open("plot2.csv", 'wb') as resultFile:
-        #     wr = csv.writer(resultFile, dialect='excel')
-        #     wr.writerows(ts_plot2)
+        with open("plot2.csv", 'wb') as resultFile:
+            wr = csv.writer(resultFile, dialect='excel')
+            wr.writerows(ts_plot)
 
     return ts_plot
 
 # t1 = datetime.datetime.now()
 
-# calc_jason_ts('10.421329344937973','10.580663601863193','2008-01-01','2016-09-15','135','jason2')
+# Niger
+# calc_jason_ts('10.421329344937973','10.580663601863193','2008-01-01','2017-12-31','135','jason2')
+# Myanmar
 # calc_jason_ts('16.147471112269287','16.22330557626728','2008-01-01','2017-12-01','205','jason2')
-# calc_jason_ts('12.515050883512345','12.52665571422412','2008-01-01','2016-09-15','001','jason2')
+# cambodia
+# calc_jason_ts('12.51562944586206','12.525013877044515','2008-01-01','2017-12-15','001','jason2')
 
 # print "Processing time: {}".format(datetime.datetime.now()-t1)
