@@ -264,7 +264,7 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
 
                         args = {'file': os.path.join(working_dir,file), 'lat_range': [lat1,lat2], 'counter': counter}
                         results = parse_netCDF(args)
-                        print results
+                        #print results
                         try:
                             testerOut = filter_outlier(results)
                         except:
@@ -283,10 +283,6 @@ def calc_jason_ts(lat1,lat2,start_date,end_date,track,sensor):
 
         finalH, finalT = iqrFilter(np.array(testHt),np.array(dt))
         ts_plot = zip(*[finalT,finalH])
-
-        with open("plot2.csv", 'wb') as resultFile:
-            wr = csv.writer(resultFile, dialect='excel')
-            wr.writerows(ts_plot)
 
     return ts_plot
 

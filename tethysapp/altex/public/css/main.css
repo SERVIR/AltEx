@@ -1,9 +1,16 @@
-#app-content-wrapper #app-content{
+#app-content-wrapper #app-content {
+    padding-bottom:0;
+    margin:0;
     height: 100%;
 }
+#app-content-wrapper #app-content #app-actions{
+    display:none;
+}
 
-#inner-app-content{
-    padding: 0;
+#inner-app-content {
+    padding:0;
+    margin:0;
+    height: 100%;
 }
 .warning{
     font-size: 200%;
@@ -51,18 +58,18 @@
 .logo-image img {
   max-width: 100%;
 }
-#help-modal .modal-dialog{
-    position: fixed;
-    display: table; //This is important
-    overflow-y: auto;
-    overflow-x: auto;
-    width: auto;
-    min-width: 100%;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: 0;
-}
+/*#help-modal .modal-dialog{*/
+    /*position: fixed;*/
+    /*display: table; //This is important*/
+    /*overflow-y: auto;*/
+    /*overflow-x: auto;*/
+    /*width: auto;*/
+    /*min-width: 100%;*/
+    /*top: 0;*/
+    /*bottom: 0;*/
+    /*right: 0;*/
+    /*left: 0;*/
+/*}*/
 
 #chart-modal .modal-dialog{
     width: auto;

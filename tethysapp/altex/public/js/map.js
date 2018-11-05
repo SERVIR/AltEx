@@ -304,7 +304,7 @@ var LIBRARY_OBJECT = (function() {
             var index = parseInt(sensor.split('|')[0]) + 1;
 
             current_layer = layers[index];
-            console.log(index)
+            // console.log(index)
 
             var wms_url = current_layer.getSource().getGetFeatureInfoUrl(coords, viewResolution, view.getProjection(), {'INFO_FORMAT': 'application/json'});
 
@@ -388,7 +388,16 @@ var LIBRARY_OBJECT = (function() {
 
     $(function() {
         init_all();
-
+        Highcharts.setOptions({
+            lang: {
+                noData: 'Personalized no data message'
+            }
+        });
+        var chart = Highcharts.chart('plotter', {
+            series: [{
+                data: []
+            }]
+        });
         $("#btn-submit").on('click',function(){
             $('.warning').html('');
             // $loading.removeClass('hidden');
@@ -523,8 +532,8 @@ var LIBRARY_OBJECT = (function() {
         });
 
         $(window).on('resize', function(){
-          chart.redraw()
-        })
+            chart.redraw()
+        });
 
         $('#select-sat').change(function(){
             map.getLayers().item(1).setVisible(false);

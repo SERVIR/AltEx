@@ -6,5 +6,5 @@ geoserver = {'rest_url':'http://tethys.servirglobal.net:8181/geoserver/rest',
              'saral_store':'SARAL_Ground_Track'}
 
 # Replace this with the path to the data directory
-JASON2_DIR = '/media/sf_altimetry/jason2_compressed/'
-JASON3_DIR = '/media/sf_altimetry/jason3_igdr_compressed/'
+JASON2_DIR = '/media/sf_jason2_compressed/'
+JASON3_DIR = '/media/sf_jason3_igdr_compressed/'
